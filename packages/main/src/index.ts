@@ -14,7 +14,7 @@ export async function initApp(initConfig: AppInitConfig) {
     .init(createWindowManagerModule({initConfig, openDevTools: import.meta.env.DEV}))
     .init(disallowMultipleAppInstance())
     .init(terminateAppOnLastWindowClose())
-    .init(hardwareAccelerationMode({enable: false}))
+    .init(hardwareAccelerationMode({enable: true}))
     .init(autoUpdater())
 
     // Install DevTools extension if needed

@@ -36,6 +36,8 @@
     "playwright": "^1.53.1"
   },
   "dependencies": {
-    "@app/main": "*"
+    "@app/main": "*",
+    "dockview-vue": "^4.4.0",
+    "pixi.js": "^8.11.0"
   }
 }
