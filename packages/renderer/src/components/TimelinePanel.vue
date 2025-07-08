@@ -20,7 +20,6 @@ const {
   isPlaying,
   animationName,
   layerStates,
-  timelineWidth,
   playheadPosition,
   isDraggingPlayhead,
   timelineFrames,
@@ -70,6 +69,8 @@ watch(playheadPosition, (newPos) => {
         ref="layersContainer"
         :layer-states="layerStates"
         :selected-layer-id="animationState?.selectedLayerId ?? null"
+        :layer-height="layerHeight"
+        :frame-width="frameWidth"
         @select-layer="selectLayer"
       />
 
@@ -94,7 +95,7 @@ watch(playheadPosition, (newPos) => {
               v-for="(layer, index) in layerStates"
               :key="layer.layerId"
               class="track"
-              :style="{ top: `${index * layerHeight}px` }"
+              :style="{ top: `${index * layerHeight - 1}px` }"
             >
               <!-- Keyframes -->
               <div

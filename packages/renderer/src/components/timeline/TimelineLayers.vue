@@ -35,7 +35,7 @@ const emit = defineEmits(['select-layer']);
         <div class="layer-info">
           <div class="layer-name">{{ layer.layerName }}</div>
           <div class="layer-type">
-            {{ layer.isNullLayer ? `[Null: ${layer.layerId}]` : `[Sprite: ${layer.layerId}]` }}
+            {{ layer.isNullLayer ? `[Null: ${layer.originalNullId}]` : `[Sprite: ${layer.layerId}]` }}
           </div>
         </div>
       </div>
@@ -54,7 +54,10 @@ const emit = defineEmits(['select-layer']);
 }
 
 .layers-header {
-  padding: 12px;
+  height: 30px;
+  padding-left: 12px;
+  display: flex;
+  align-items: center;
   background-color: var(--bg-white);
   border-bottom: 1px solid var(--border-color);
   box-shadow: var(--shadow-light);
@@ -73,9 +76,10 @@ const emit = defineEmits(['select-layer']);
 .layer-item {
   display: flex;
   align-items: center;
-  height: 32px;
+  height: v-bind(layerHeight + 'px');
+  box-sizing: border-box;
   padding: 0 8px;
-  border-bottom: 0.5px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   gap: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
