@@ -9,6 +9,7 @@ const animationState: AnimationState = reactive({
   availableAnimations: [],
   currentAnimation: "",
   selectedLayerId: null,
+  selectedSpritesheetId: null,
   currentFrame: 0,
   setAnimation: (name: string) => {
     if (animationState.renderer) {
@@ -27,7 +28,7 @@ const animationState: AnimationState = reactive({
 
     const layerStates = animationState.renderer.getCurrentLayerStates();
     const selectedLayerState = layerStates.find(
-      (state: any) => state.layerId === animationState.selectedLayerId
+      (state: any) => state.layerId === animationState.selectedLayerId,
     );
 
     return selectedLayerState?.currentFrame || null;
@@ -39,7 +40,7 @@ const animationState: AnimationState = reactive({
 
     const layerStates = animationState.renderer.getCurrentLayerStates();
     const selectedLayerState = layerStates.find(
-      (state: any) => state.layerId === animationState.selectedLayerId
+      (state: any) => state.layerId === animationState.selectedLayerId,
     );
 
     return selectedLayerState?.layerName || "";
@@ -50,48 +51,64 @@ const animationState: AnimationState = reactive({
 provide("animationState", animationState);
 
 const onReady = (event: DockviewReadyEvent) => {
-  // Preview 패널 추가
   event.api.addPanel({
-    id: "preview-panel",
-    title: "Preview",
-    component: "preview-panel",
+    id: "spritesheet-viewer-panel",
+    title: "Spritesheet Viewer",
+    component: "spritesheet-viewer-panel",
   });
 
-  // Properties 패널 추가
   event.api.addPanel({
     id: "properties-panel",
     title: "Properties",
     component: "properties-panel",
     position: {
-      referencePanel: "preview-panel",
+      referencePanel: "spritesheet-viewer-panel",
       direction: "right",
     },
     initialWidth: 250,
   });
 
-  // Timeline 패널 추가
   event.api.addPanel({
     id: "timeline-panel",
     title: "Timeline",
     component: "timeline-panel",
     position: {
-      referencePanel: "preview-panel",
+      referencePanel: "spritesheet-viewer-panel",
       direction: "below",
     },
   });
 
-    // Animation List 패널 추가
-    event.api.addPanel({
-    id: "animation-list-panel",
-    title: "Animations",
-    component: "animation-list-panel",
+  event.api.addPanel({
+    id: "preview-panel",
+    title: "Preview",
+    component: "preview-panel",
     position: {
       referencePanel: "timeline-panel",
+      direction: "left",
+    },
+    initialWidth: 400,
+  });
+
+  event.api.addPanel({
+    id: "spritesheet-list-panel",
+    title: "Spritesheets",
+    component: "spritesheet-list-panel",
+    position: {
+      referencePanel: "spritesheet-viewer-panel",
       direction: "right",
     },
     initialWidth: 250,
   });
 
+  event.api.addPanel({
+    id: "animation-list-panel",
+    title: "Animations",
+    component: "animation-list-panel",
+    position: {
+      referencePanel: "spritesheet-list-panel",
+      direction: "below",
+    },
+  });
 };
 </script>
 

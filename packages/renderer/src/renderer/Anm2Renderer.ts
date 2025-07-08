@@ -1,5 +1,6 @@
 import { Container, Sprite, Texture, Assets, Rectangle, TextureSource, Graphics } from 'pixi.js';
 import type { Anm2Data, Anm2Animation, Anm2LayerAnimation, Anm2NullAnimation, Anm2Frame } from '../types/anm2';
+import type { LayerState } from '../types/animation';
 
 export class Anm2Renderer {
   private anm2Data: Anm2Data;
@@ -368,7 +369,7 @@ export class Anm2Renderer {
    */
   private applyFrameToSprite(sprite: Sprite, frame: Anm2Frame, layerId: number): void {
     // 레이어 정보 가져오기
-    const layer = this.anm2Data.content.layers.find(l => l.id === layerId);
+    const layer = this.getLayerById(layerId);
     if (!layer) return;
 
     // 텍스처 설정
@@ -463,15 +464,43 @@ export class Anm2Renderer {
     return this.anm2Data.content.layers;
   }
 
+  /**
+   * 모든 스프라이트시트 정보를 가져옵니다.
+   */
+  getSpritesheets() {
+    return this.anm2Data.content.spritesheets;
+  }
+
+  /**
+   * anm2 데이터 전체를 가져옵니다.
+   */
+  getAnm2Data() {
+    return this.anm2Data;
+  }
+
+  /**
+   * 특정 ID로 레이어를 가져옵니다.
+   */
+  private getLayerById(layerId: number) {
+    return this.anm2Data.content.layers.find(l => l.id === layerId);
+  }
+
+  /**
+   * 특정 ID로 null을 가져옵니다.
+   */
+  private getNullById(nullId: number) {
+    return this.anm2Data.content.nulls.find(n => n.id === nullId);
+  }
+
     /**
    * 현재 애니메이션의 레이어 상태 정보를 가져옵니다 (null 포함).
    */
-  getCurrentLayerStates() {
+  getCurrentLayerStates(): LayerState[] {
     const animation = this.getCurrentAnimation();
     if (!animation) return [];
 
-    const layerStates = animation.layerAnimations.map(layerAnim => {
-      const layer = this.anm2Data.content.layers.find(l => l.id === layerAnim.layerId);
+    const layerStates: LayerState[] = animation.layerAnimations.map((layerAnim): LayerState => {
+      const layer = this.getLayerById(layerAnim.layerId);
       const spritesheet = this.anm2Data.content.spritesheets.find(s => s.id === layer?.spritesheetId);
 
       // 현재 프레임에 해당하는 Frame 찾기
@@ -500,13 +529,13 @@ export class Anm2Renderer {
         frameCount: layerAnim.frames.length,
         currentFrame: currentFrameData,
         isCurrentlyVisible: layerAnim.visible && (currentFrameData?.visible ?? false),
-        isNull: false
+        isNullLayer: false
       };
     });
 
     // null 상태들 추가 (ID를 음수로 변환하여 레이어와 구분)
-    const nullStates = animation.nullAnimations.map(nullAnim => {
-      const nullItem = this.anm2Data.content.nulls.find(n => n.id === nullAnim.nullId);
+    const nullStates: LayerState[] = animation.nullAnimations.map((nullAnim): LayerState => {
+      const nullItem = this.getNullById(nullAnim.nullId);
 
       // 현재 프레임에 해당하는 Frame 찾기
       let currentFrameData = null;
@@ -534,7 +563,7 @@ export class Anm2Renderer {
         frameCount: nullAnim.frames.length,
         currentFrame: currentFrameData,
         isCurrentlyVisible: nullAnim.visible && (currentFrameData?.visible ?? false),
-        isNull: true,
+        isNullLayer: true,
         originalNullId: nullAnim.nullId // 원본 null ID 보존
       };
     });
