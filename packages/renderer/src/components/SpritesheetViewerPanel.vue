@@ -2,6 +2,9 @@
 import { ref } from 'vue';
 import type { IDockviewPanelProps } from 'dockview-vue';
 import { useSpritesheetViewer } from '../composables/useSpritesheetViewer';
+import OverlayControls from './OverlayControls.vue';
+import ControlGroup from './ControlGroup.vue';
+import ControlButton from './ControlButton.vue';
 
 defineProps<{
   params: IDockviewPanelProps;
@@ -19,8 +22,6 @@ const {
   selectedSpritesheet,
   setZoom,
   resetView,
-  fitToView,
-  setPixelPerfect,
   toggleGrid,
   setBackgroundColor,
 } = useSpritesheetViewer(pixiContainer);
@@ -31,71 +32,62 @@ const zoomOut = () => setZoom(zoomLevel.value / 1.2);
 
 <template>
   <div class="spritesheet-viewer-panel">
-    <!-- Header Section -->
-    <div class="panel-header">
-      <div class="header-left">
-        <h3 class="panel-title">Spritesheet Viewer</h3>
-        <span v-if="selectedSpritesheet" class="current-spritesheet">
-          {{ selectedSpritesheet.path }}
-        </span>
-      </div>
-      
-      <div class="header-controls">
-        <!-- Zoom Controls -->
-        <div class="control-group">
-          <button @click="zoomOut" class="control-btn" title="Zoom Out">🔍-</button>
-          <span class="zoom-display">{{ Math.round(zoomLevel * 100) }}%</span>
-          <button @click="zoomIn" class="control-btn" title="Zoom In">🔍+</button>
-        </div>
-
-        <!-- View Controls -->
-        <div class="control-group">
-          <button @click="resetView" class="control-btn" title="Reset View">🏠</button>
-          <button @click="fitToView" class="control-btn" title="Fit to View">📐</button>
-          <button @click="setPixelPerfect" class="control-btn" title="Pixel Perfect (1:1)">🎯</button>
-        </div>
-
-        <!-- Display Options -->
-        <div class="control-group">
-          <button 
-            @click="toggleGrid" 
-            class="control-btn"
-            :class="{ active: showGrid }"
-            title="Toggle Grid"
-          >
-            #
-          </button>
-        </div>
-
-        <!-- Background Controls -->
-        <div class="control-group">
-          <select 
-            :value="backgroundColor" 
-            @change="setBackgroundColor(($event.target as HTMLSelectElement).value)"
-            class="background-select"
-            title="Background"
-          >
-            <option value="checkerboard">Checkerboard</option>
-            <option value="white">White</option>
-            <option value="black">Black</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
     <!-- Main Content -->
     <div class="panel-content">
       <div class="viewer-container">
         <!-- Pixi Container - always rendered -->
         <div ref="pixiContainer" class="pixi-container"></div>
-        
+
+        <!-- Title Overlay -->
+        <OverlayControls position="top-left" v-if="selectedSpritesheet">
+          <div class="title-info">
+            <h3 class="panel-title">{{ selectedSpritesheet.path }}</h3>
+          </div>
+        </OverlayControls>
+
+        <!-- Display & Background Controls -->
+        <OverlayControls position="top-right" v-if="selectedSpritesheet">
+          <ControlGroup>
+            <ControlButton
+              @click="toggleGrid"
+              :active="showGrid"
+              title="Toggle Grid"
+            >
+              #
+            </ControlButton>
+            <select
+              :value="backgroundColor"
+              @change="setBackgroundColor(($event.target as HTMLSelectElement).value)"
+              class="background-select"
+              title="Background"
+            >
+              <option value="checkerboard">Checkerboard</option>
+              <option value="white">White</option>
+              <option value="black">Black</option>
+            </select>
+          </ControlGroup>
+        </OverlayControls>
+
+        <!-- Zoom Controls -->
+        <OverlayControls position="bottom-center" v-if="selectedSpritesheet">
+          <ControlGroup>
+            <ControlButton @click="zoomOut" title="Zoom Out">-</ControlButton>
+            <span class="zoom-level" @click="resetView">{{ Math.round(zoomLevel * 100) }}%</span>
+            <ControlButton @click="zoomIn" title="Zoom In">+</ControlButton>
+            <ControlButton @click="resetView" variant="reset" title="Reset Zoom">Reset</ControlButton>
+          </ControlGroup>
+        </OverlayControls>
+
         <!-- Empty State Overlay -->
         <div v-if="selectedSpritesheet === null" class="empty-state-overlay">
-          <p>Select a spritesheet to view</p>
+          <div class="empty-state-content">
+            <h3>Spritesheet Viewer</h3>
+            <p>Select a spritesheet to view</p>
+          </div>
         </div>
-        
+
         <!-- Info Overlay -->
-        <div v-else class="info-overlay">
+        <div v-if="selectedSpritesheet" class="info-overlay">
           <div class="info-section">
             <div class="info-item">
               <span class="info-label">Image Size:</span>
@@ -127,130 +119,12 @@ const zoomOut = () => setZoom(zoomLevel.value / 1.2);
   box-sizing: border-box;
 }
 
-/* Header Section */
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background-color: var(--bg-white);
-  border-bottom: 1px solid var(--border-color);
-  box-shadow: var(--shadow-light);
-  flex-shrink: 0;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.panel-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-color);
-  margin: 0;
-}
-
-.current-spritesheet {
-  font-size: 11px;
-  color: var(--text-color-muted);
-  font-weight: 400;
-}
-
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.control-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px;
-  background-color: var(--bg-color);
-  border-radius: var(--border-radius-small);
-  border: 1px solid var(--border-color);
-}
-
-.control-btn {
-  padding: 6px 8px;
-  border: none;
-  background: transparent;
-  color: var(--text-color);
-  cursor: pointer;
-  border-radius: var(--border-radius-xs);
-  font-size: 11px;
-  font-weight: 500;
-  transition: all 0.15s ease;
-  min-width: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.control-btn:hover {
-  background-color: var(--bg-hover);
-}
-
-.control-btn.active {
-  background-color: var(--bg-selected);
-  color: var(--primary-color);
-}
-
-.zoom-display {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-color);
-  min-width: 40px;
-  text-align: center;
-}
-
-.background-select {
-  padding: 4px 6px;
-  border: none;
-  background: transparent;
-  color: var(--text-color);
-  font-size: 11px;
-  cursor: pointer;
-  border-radius: var(--border-radius-xs);
-}
-
-.background-select:focus {
-  outline: none;
-  background-color: var(--bg-hover);
-}
-
 /* Content Section */
 .panel-content {
   flex: 1;
   position: relative;
   overflow: hidden;
   min-height: 0;
-}
-
-.empty-state-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--bg-color);
-  color: var(--text-color-muted);
-  pointer-events: none;
-  z-index: 10;
-}
-
-.empty-state-overlay p {
-  font-size: 14px;
-  margin: 0;
 }
 
 .viewer-container {
@@ -274,10 +148,99 @@ const zoomOut = () => setZoom(zoomLevel.value / 1.2);
   cursor: grabbing;
 }
 
+/* Title Overlay */
+.title-info {
+  pointer-events: none;
+}
+
+.panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+/* Zoom Level Display */
+.zoom-level {
+  font-size: 11px;
+  font-weight: 500;
+  min-width: 44px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text-color-muted);
+  padding: 4px 6px;
+  border-radius: var(--border-radius-small);
+  transition: all 0.15s ease;
+}
+
+.zoom-level:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-color);
+}
+
+/* Background Select */
+.background-select {
+  padding: 4px 6px;
+  border: 1px solid var(--button-border);
+  background-color: var(--button-bg);
+  color: var(--text-color);
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: var(--border-radius-small);
+  transition: all 0.15s ease;
+}
+
+.background-select:hover {
+  background-color: var(--button-hover-bg);
+  border-color: var(--button-hover-border);
+}
+
+.background-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+/* Empty State */
+.empty-state-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-color);
+  color: var(--text-color-muted);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.empty-state-content {
+  text-align: center;
+}
+
+.empty-state-content h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--text-color);
+}
+
+.empty-state-content p {
+  font-size: 14px;
+  margin: 0;
+  color: var(--text-color-muted);
+}
+
 /* Info Overlay */
 .info-overlay {
   position: absolute;
-  top: 12px;
+  bottom: 12px;
   right: 12px;
   background-color: rgba(0, 0, 0, 0.8);
   color: white;
@@ -286,6 +249,7 @@ const zoomOut = () => setZoom(zoomLevel.value / 1.2);
   font-size: 11px;
   pointer-events: none;
   backdrop-filter: blur(4px);
+  z-index: 50;
 }
 
 .info-section {
@@ -313,24 +277,14 @@ const zoomOut = () => setZoom(zoomLevel.value / 1.2);
 
 /* Responsive */
 @media (max-width: 768px) {
-  .panel-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .header-controls {
-    justify-content: center;
-  }
-  
-  .control-group {
-    flex: 1;
-    justify-content: center;
-  }
-  
   .info-overlay {
     position: static;
     margin: 8px;
     pointer-events: auto;
   }
+
+  .title-info .panel-title {
+    max-width: 200px;
+  }
 }
-</style> 
+</style>

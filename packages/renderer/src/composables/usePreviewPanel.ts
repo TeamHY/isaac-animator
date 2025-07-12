@@ -52,12 +52,12 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
 
   const drawCrosshair = () => {
     if (!crosshairGraphics || !renderer) return;
-  
+
     const { width, height } = renderer.screen;
     crosshairGraphics.clear();
-  
+
     if (!showCrosshair.value) return;
-  
+
     crosshairGraphics.lineStyle(1, 0xcccccc, 0.5).moveTo(-width, 0).lineTo(width, 0);
     crosshairGraphics.lineStyle(1, 0xcccccc, 0.5).moveTo(0, -height).lineTo(0, height);
   };
@@ -66,8 +66,13 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
     if (renderer && pixiContainer.value) {
       const { clientWidth, clientHeight } = pixiContainer.value;
       renderer.resize(clientWidth, clientHeight);
+
       drawCrosshair();
       updateCamera();
+
+      if (stage) {
+        renderer.render(stage);
+      }
     }
   };
 
@@ -75,7 +80,7 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
     if (pixiContainer.value) {
       resizeObserver = new ResizeObserver(resizeRenderer);
       resizeObserver.observe(pixiContainer.value);
-      
+
       // cleanup 함수 등록
       addCleanup(() => {
         resizeObserver?.disconnect();
@@ -85,9 +90,9 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
 
   const setupZoomAndPan = () => {
     if (!pixiContainer.value || !renderer) return;
-  
+
     const canvas = renderer.canvas;
-  
+
     const handleWheel = (event: Event) => {
       const wheelEvent = event as WheelEvent;
       wheelEvent.preventDefault();
@@ -95,14 +100,14 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
       zoomLevel.value = Math.max(0.1, Math.min(8, zoomLevel.value * zoomFactor));
       updateCamera();
     };
-  
+
     const handleMouseDown = (event: Event) => {
       const mouseEvent = event as MouseEvent;
       if (mouseEvent.button === 0) {
         panDragHandler.startDrag(mouseEvent);
       }
     };
-  
+
     addEventListener(canvas, 'wheel', handleWheel, { passive: false });
     addEventListener(canvas, 'mousedown', handleMouseDown);
   };
@@ -120,7 +125,7 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
 
       stage = new Container();
       pixiContainer.value.appendChild(renderer.canvas);
-      
+
       resizeRenderer();
 
       const anm2Data = await Anm2Parser.parseFromUrl('/010.000_frowning gaper.anm2');
@@ -179,7 +184,7 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
       }
     },
   );
-  
+
   watch(showCrosshair, drawCrosshair);
 
   const setZoom = (newZoom: number) => {
@@ -192,7 +197,7 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
     cameraOffset = { x: 0, y: 0 };
     updateCamera();
   };
-  
+
   const togglePlay = () => {
     if (!anm2Renderer) return;
     if (anm2Renderer.getIsPlaying()) {

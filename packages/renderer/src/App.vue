@@ -79,17 +79,6 @@ const onReady = (event: DockviewReadyEvent) => {
   });
 
   event.api.addPanel({
-    id: "preview-panel",
-    title: "Preview",
-    component: "preview-panel",
-    position: {
-      referencePanel: "timeline-panel",
-      direction: "left",
-    },
-    initialWidth: 400,
-  });
-
-  event.api.addPanel({
     id: "spritesheet-list-panel",
     title: "Spritesheets",
     component: "spritesheet-list-panel",
@@ -108,6 +97,16 @@ const onReady = (event: DockviewReadyEvent) => {
       referencePanel: "spritesheet-list-panel",
       direction: "below",
     },
+  });
+
+  event.api.addPanel({
+    id: "preview-panel",
+    title: "Preview",
+    component: "preview-panel",
+    position: {
+      referencePanel: "spritesheet-viewer-panel",
+      direction: "left",
+    }
   });
 };
 </script>

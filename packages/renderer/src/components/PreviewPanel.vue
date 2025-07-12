@@ -2,6 +2,9 @@
 import { ref } from 'vue';
 import type { IDockviewPanelProps } from 'dockview-vue';
 import { usePreviewPanel } from '../composables/usePreviewPanel';
+import OverlayControls from './OverlayControls.vue';
+import ControlGroup from './ControlGroup.vue';
+import ControlButton from './ControlButton.vue';
 
 defineProps<{
   params: IDockviewPanelProps;
@@ -16,20 +19,20 @@ const { isPlaying, zoomLevel, showCrosshair, setZoom, resetZoom, togglePlay } =
 <template>
   <div class="preview-panel">
     <div ref="pixiContainer" class="pixi-container"></div>
-    <div class="controls">
-      <div class="zoom-controls">
-        <button @click="setZoom(zoomLevel / 1.2)" class="control-btn">-</button>
+    <OverlayControls position="bottom-center">
+      <ControlGroup>
+        <ControlButton @click="setZoom(zoomLevel / 1.2)" title="Zoom Out">-</ControlButton>
         <span class="zoom-level" @click="resetZoom">{{ Math.round(zoomLevel * 100) }}%</span>
-        <button @click="setZoom(zoomLevel * 1.2)" class="control-btn">+</button>
-        <button @click="resetZoom" class="control-btn reset-btn">Reset</button>
-      </div>
-      <div class="toggle-controls">
-        <label>
+        <ControlButton @click="setZoom(zoomLevel * 1.2)" title="Zoom In">+</ControlButton>
+        <ControlButton @click="resetZoom" variant="reset" title="Reset Zoom">Reset</ControlButton>
+      </ControlGroup>
+      <ControlGroup>
+        <label class="toggle-control">
           <input type="checkbox" v-model="showCrosshair" />
           Show Crosshair
         </label>
-      </div>
-    </div>
+      </ControlGroup>
+    </OverlayControls>
   </div>
 </template>
 
@@ -56,63 +59,6 @@ const { isPlaying, zoomLevel, showCrosshair, setZoom, resetZoom, togglePlay } =
   cursor: grabbing;
 }
 
-.controls {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background-color: var(--bg-control);
-  padding: 8px 12px;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-elevated);
-  backdrop-filter: blur(10px);
-}
-
-.control-btn {
-  width: 28px;
-  height: 28px;
-  background-color: var(--button-bg);
-  border: 1px solid var(--button-border);
-  border-radius: var(--border-radius-small);
-  color: var(--button-text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.15s ease;
-  box-shadow: var(--shadow-normal);
-}
-
-.control-btn:hover {
-  background-color: var(--button-hover-bg);
-  border-color: var(--button-hover-border);
-  box-shadow: var(--shadow-medium);
-}
-
-.control-btn:active {
-  transform: translateY(1px);
-  box-shadow: var(--shadow-normal);
-}
-
-.reset-btn {
-  width: auto !important;
-  padding: 0 10px;
-  min-width: 28px;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.zoom-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .zoom-level {
   font-size: 11px;
   font-weight: 500;
@@ -130,7 +76,7 @@ const { isPlaying, zoomLevel, showCrosshair, setZoom, resetZoom, togglePlay } =
   color: var(--text-color);
 }
 
-.toggle-controls label {
+.toggle-control {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -140,7 +86,7 @@ const { isPlaying, zoomLevel, showCrosshair, setZoom, resetZoom, togglePlay } =
   color: var(--text-color-muted);
 }
 
-.toggle-controls input[type="checkbox"] {
+.toggle-control input[type="checkbox"] {
   width: 14px;
   height: 14px;
   border: 1px solid var(--border-color-secondary);
@@ -151,7 +97,7 @@ const { isPlaying, zoomLevel, showCrosshair, setZoom, resetZoom, togglePlay } =
 
 /* Dark mode is handled by CSS variables */
 @media (prefers-color-scheme: dark) {
-  .toggle-controls input[type="checkbox"] {
+  .toggle-control input[type="checkbox"] {
     accent-color: var(--accent-color);
   }
 }

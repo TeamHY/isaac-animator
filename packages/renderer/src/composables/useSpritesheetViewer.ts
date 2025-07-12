@@ -30,6 +30,7 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
   let mainSprite: Sprite | null = null;
   let currentTexture: Texture | null = null;
   let cameraOffset = { x: 0, y: 0 };
+  let resizeObserver: ResizeObserver | null = null;
 
   // Pan drag handler
   const panDragHandler = useDragHandler({
@@ -54,23 +55,23 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
       selectedSpritesheetId: selectedSpritesheet.value?.id
     });
 
-    if (animationState?.selectedLayerId === null || 
-        !animationState?.renderer || 
+    if (animationState?.selectedLayerId === null ||
+        !animationState?.renderer ||
         !selectedSpritesheet.value) {
       console.log('Early exit from currentLayerCropInfo');
       return null;
     }
-    
+
     // Get the selected layer info from layer states
     const layerStates = animationState.renderer.getCurrentLayerStates();
-    console.log('Layer states:', layerStates.map(l => ({ 
-      id: l.layerId, 
-      name: l.layerName, 
-      hasFrame: !!l.currentFrame 
+    console.log('Layer states:', layerStates.map(l => ({
+      id: l.layerId,
+      name: l.layerName,
+      hasFrame: !!l.currentFrame
     })));
 
     const selectedLayer = layerStates.find(layer => layer.layerId === animationState.selectedLayerId);
-    
+
     if (!selectedLayer) {
       console.log('Selected layer not found in layer states');
       return null;
@@ -80,18 +81,18 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
       console.log('Selected layer has no current frame:', selectedLayer);
       return null;
     }
-    
+
     // Check if the selected layer uses the currently displayed spritesheet
     // For regular layers (positive IDs), check spritesheet mapping
     if (animationState.selectedLayerId !== null && animationState.selectedLayerId >= 0) {
       const layerInfo = getSelectedLayer();
-      
+
       console.log('Layer info:', {
         layerInfo,
         layerSpritesheetId: layerInfo?.type === 'layer' ? layerInfo.data.spritesheetId : undefined,
         selectedSpritesheetId: selectedSpritesheet.value.id
       });
-      
+
       if (!layerInfo || layerInfo.type !== 'layer' || layerInfo.data.spritesheetId !== selectedSpritesheet.value.id) {
         console.log('Layer does not use this spritesheet');
         return null; // Layer doesn't use this spritesheet
@@ -101,17 +102,17 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
       console.log('Null layer selected, no crop info');
       return null;
     }
-    
+
     const frameData = selectedLayer.currentFrame;
     console.log('Frame data:', frameData);
-    
+
     // Validate crop data exists
-    if (frameData.xCrop === undefined || frameData.yCrop === undefined || 
+    if (frameData.xCrop === undefined || frameData.yCrop === undefined ||
         frameData.width === undefined || frameData.height === undefined) {
       console.log('Frame data missing crop information');
       return null;
     }
-    
+
     const cropInfo = {
       x: frameData.xCrop,
       y: frameData.yCrop,
@@ -151,16 +152,16 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
 
   const fitToView = () => {
     if (!renderer || !currentTexture) return;
-    
+
     const canvasWidth = renderer.screen.width;
     const canvasHeight = renderer.screen.height;
     const imageWidth = currentTexture.width;
     const imageHeight = currentTexture.height;
-    
+
     const scaleX = canvasWidth / imageWidth;
     const scaleY = canvasHeight / imageHeight;
     const scale = Math.min(scaleX, scaleY) * 0.9;
-    
+
     setZoom(scale);
     cameraOffset = { x: 0, y: 0 };
   };
@@ -184,16 +185,16 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     if (!checkerboardGraphics || !renderer) return;
 
     checkerboardGraphics.clear();
-    
+
     const tileSize = 16;
     const width = renderer.screen.width + 200;  // Extra margin for panning
     const height = renderer.screen.height + 200;
-    
+
     for (let x = -100; x < width; x += tileSize) {
       for (let y = -100; y < height; y += tileSize) {
         const isEven = ((x / tileSize) + (y / tileSize)) % 2 === 0;
         const color = isEven ? 0xcccccc : 0xffffff;
-        
+
         checkerboardGraphics.fill(color);
         checkerboardGraphics.rect(x, y, tileSize, tileSize);
         checkerboardGraphics.fill();
@@ -235,13 +236,13 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
 
     textureBorderGraphics.clear();
     textureBorderGraphics.stroke({ width: borderWidth, color: 0x666666, alpha: 0.8 });
-    
+
     // Draw border around texture
     const x = -currentTexture.width / 2;
     const y = -currentTexture.height / 2;
     const w = currentTexture.width;
     const h = currentTexture.height;
-    
+
     textureBorderGraphics.rect(x, y, w, h);
     textureBorderGraphics.stroke();
 
@@ -257,12 +258,12 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     if (!gridGraphics || !currentTexture) return;
 
     gridGraphics.clear();
-    
+
     if (!showGrid.value) return;
 
     const gridSize = 32;
     const scale = zoomLevel.value;
-    
+
     gridGraphics.stroke({ width: 1 / scale, color: 0xff0000, alpha: 0.3 });
 
     // Vertical lines
@@ -307,7 +308,7 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     }
 
     const crop = currentLayerCropInfo.value;
-    
+
     // Validate crop dimensions
     if (crop.width <= 0 || crop.height <= 0) {
       console.warn('Invalid crop dimensions:', crop);
@@ -315,8 +316,8 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     }
 
     // Validate crop is within texture bounds
-    if (crop.x < 0 || crop.y < 0 || 
-        crop.x + crop.width > currentTexture.width || 
+    if (crop.x < 0 || crop.y < 0 ||
+        crop.x + crop.width > currentTexture.width ||
         crop.y + crop.height > currentTexture.height) {
       console.warn('Crop extends outside texture bounds:', {
         crop,
@@ -355,16 +356,16 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     try {
       const texture = await Assets.load<Texture>(path);
       texture.source.scaleMode = 'nearest';
-      
+
       console.log('Image loaded successfully:', path, texture.width, 'x', texture.height);
-      
+
       currentTexture = texture;
       mainSprite.texture = texture;
       imageSize.value = { width: texture.width, height: texture.height };
-      
+
       // Center the image
       mainSprite.anchor.set(0.5);
-      
+
       updateCamera();
       updateGrid();
       updateTextureBorder();
@@ -390,8 +391,8 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     const worldX = (canvasX - centerX - cameraOffset.x) / scale + currentTexture.width / 2;
     const worldY = (canvasY - centerY - cameraOffset.y) / scale + currentTexture.height / 2;
 
-    mousePosition.value = { 
-      x: Math.floor(Math.max(0, Math.min(worldX, currentTexture.width - 1))), 
+    mousePosition.value = {
+      x: Math.floor(Math.max(0, Math.min(worldX, currentTexture.width - 1))),
       y: Math.floor(Math.max(0, Math.min(worldY, currentTexture.height - 1)))
     };
   };
@@ -410,17 +411,33 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     }
   };
 
-  const resizeRenderer = () => {
-    if (!renderer || !pixiContainer.value) return;
-    
-    const rect = pixiContainer.value.getBoundingClientRect();
-    renderer.resize(rect.width, rect.height);
-    
-    if (backgroundColor.value === 'checkerboard') {
-      createCheckerboard();
+    const resizeRenderer = () => {
+    if (renderer && pixiContainer.value) {
+      const { clientWidth, clientHeight } = pixiContainer.value;
+      renderer.resize(clientWidth, clientHeight);
+
+      if (backgroundColor.value === 'checkerboard') {
+        createCheckerboard();
+      }
+
+      updateCamera();
+
+      if (stage) {
+        renderer.render(stage);
+      }
     }
-    
-    updateCamera();
+  };
+
+  const setupResizeObserver = () => {
+    if (pixiContainer.value) {
+      resizeObserver = new ResizeObserver(resizeRenderer);
+      resizeObserver.observe(pixiContainer.value);
+
+      // cleanup 함수 등록
+      addCleanup(() => {
+        resizeObserver?.disconnect();
+      });
+    }
   };
 
   onMounted(async () => {
@@ -448,7 +465,7 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
       stage.addChild(cropHighlightGraphics);
 
       pixiContainer.value.appendChild(renderer.canvas);
-      
+
       resizeRenderer();
 
       ticker = new Ticker();
@@ -463,7 +480,8 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
       addEventListener(renderer.canvas, 'mousemove', onMouseMove);
       addEventListener(renderer.canvas, 'wheel', onWheel);
       addEventListener(renderer.canvas, 'mousedown', onMouseDown);
-      addEventListener(window, 'resize', resizeRenderer);
+
+      setupResizeObserver();
 
       updateBackground();
 
@@ -526,7 +544,7 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     mousePosition: computed(() => mousePosition.value),
     imageSize: computed(() => imageSize.value),
     selectedSpritesheet,
-    
+
     // Actions
     setZoom,
     resetView,
@@ -534,8 +552,8 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     setPixelPerfect,
     toggleGrid,
     setBackgroundColor,
-    
+
     // Internal
     panDragHandler,
   };
-} 
+}
