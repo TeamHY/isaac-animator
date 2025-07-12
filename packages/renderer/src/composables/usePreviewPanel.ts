@@ -128,18 +128,18 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
 
       resizeRenderer();
 
-      const anm2Data = await Anm2Parser.parseFromUrl('/010.000_frowning gaper.anm2');
-      anm2Renderer = new Anm2Renderer(anm2Data);
+      // const anm2Data = await Anm2Parser.parseFromUrl('/010.000_frowning gaper.anm2');
+      // anm2Renderer = new Anm2Renderer(anm2Data);
       stage.addChild(anm2Renderer.container);
 
-      await anm2Renderer.loadSpritesheets('/');
+      // await anm2Renderer.loadSpritesheets('/');
 
-      if (animationState) {
-        animationState.renderer = anm2Renderer;
-        animationState.availableAnimations = anm2Renderer.getAnimationNames();
-        animationState.currentAnimation = anm2Data.defaultAnimation;
-        animationState.setAnimation(animationState.currentAnimation);
-      }
+      // if (animationState) {
+      //   animationState.renderer = anm2Renderer;
+      //   animationState.availableAnimations = anm2Renderer.getAnimationNames();
+      //   animationState.currentAnimation = anm2Data.defaultAnimation;
+      //   animationState.setAnimation(animationState.currentAnimation);
+      // }
 
       updateCamera();
 
@@ -151,9 +151,6 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
         }
       });
       ticker.start();
-
-      anm2Renderer.stop();
-      isPlaying.value = false;
 
       crosshairGraphics = new Graphics();
       crosshairGraphics.zIndex = -1000;

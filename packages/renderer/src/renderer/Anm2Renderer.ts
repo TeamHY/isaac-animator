@@ -30,13 +30,13 @@ export class Anm2Renderer {
   /**
    * 스프라이트시트 텍스처들을 로드합니다.
    */
-  async loadSpritesheets(basePath: string = ''): Promise<void> {
+  async loadSpritesheets(dataURLs: Map<number, string>): Promise<void> {
     const loadPromises = this.anm2Data.content.spritesheets.map(async (spritesheet) => {
       try {
-        const path = basePath + spritesheet.path;
-        const texture = await Assets.load<Texture<TextureSource<any>>>(path);
+        const texture = await Assets.load<Texture<TextureSource<any>>>(dataURLs.get(spritesheet.id) ?? '');
         texture.source.scaleMode = 'nearest';
         this.spritesheetTextures.set(spritesheet.id, texture);
+        console.log('Spritesheet loaded:', spritesheet.id, texture.width, 'x', texture.height);
       } catch (error) {
         console.warn(`스프라이트시트 로드 실패: ${spritesheet.path}`, error);
       }
@@ -175,6 +175,10 @@ export class Anm2Renderer {
    */
   getCurrentAnimation(): Anm2Animation | undefined {
     return this.anm2Data.animations.find(anim => anim.name === this.currentAnimation);
+  }
+
+  getSpritesheetTexture(spritesheetId: number): Texture | undefined {
+    return this.spritesheetTextures.get(spritesheetId);
   }
 
   /**

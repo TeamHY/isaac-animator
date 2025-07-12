@@ -4,7 +4,7 @@ import { provide, reactive, onMounted } from "vue";
 import type { AnimationState } from "./types/animation";
 import { Anm2Parser } from "./parser/Anm2Parser";
 import { Anm2Renderer } from "./renderer/Anm2Renderer";
-import { onMenuNewFile, onMenuOpenFile, onMenuOpenFileError, onMenuSaveFile, onMenuSaveAsFile, loadImageAsDataURL } from "@app/preload";
+import { onMenuNewFile, onMenuOpenFile, onMenuOpenFileError, onMenuSaveFile, onMenuSaveAsFile, loadImageAsDataURL, getDirectoryPath, joinPath } from "@app/preload";
 
 const animationState: AnimationState = reactive({
   renderer: null,
@@ -61,16 +61,15 @@ const handleFileOpen = async (data: { filePath: string; content: string }) => {
 
     const newRenderer = new Anm2Renderer(anm2Data);
 
-    const basePath = data.filePath.substring(
-      0,
-      data.filePath.lastIndexOf("/") + 1,
-    );
+    const basePath = getDirectoryPath(data.filePath);
+
+    console.log('Base path:', basePath);
 
     // Load spritesheets as data URLs
     const spritesheetDataURLs = new Map<number, string>();
     for (const spritesheet of anm2Data.content.spritesheets) {
       try {
-        const fullPath = basePath + spritesheet.path;
+        const fullPath = joinPath(basePath, spritesheet.path);
         const dataURL = await loadImageAsDataURL(fullPath);
         spritesheetDataURLs.set(spritesheet.id, dataURL);
       } catch (error) {
@@ -78,7 +77,7 @@ const handleFileOpen = async (data: { filePath: string; content: string }) => {
       }
     }
 
-    await newRenderer.loadSpritesheetsFromDataURLs(spritesheetDataURLs);
+    await newRenderer.loadSpritesheets(spritesheetDataURLs);
 
     animationState.renderer = newRenderer;
     animationState.availableAnimations = newRenderer.getAnimationNames();

@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import {sha256sum} from './nodeCrypto.js';
 import {versions} from './versions.js';
 import {ipcRenderer} from 'electron';
@@ -9,13 +10,21 @@ function send(channel: string, message: string) {
 
 export {sha256sum, versions, send};
 
+export function getDirectoryPath(filePath: string): string {
+  return dirname(filePath);
+}
+
+export function joinPath(...paths: string[]): string {
+  return join(...paths);
+}
+
 export async function loadImageAsDataURL(imagePath: string): Promise<string> {
   try {
     const buffer = await readFile(imagePath);
     const base64 = buffer.toString('base64');
     const extension = imagePath.split('.').pop()?.toLowerCase();
     let mimeType = 'image/png';
-    
+
     if (extension === 'jpg' || extension === 'jpeg') {
       mimeType = 'image/jpeg';
     } else if (extension === 'gif') {
@@ -23,7 +32,7 @@ export async function loadImageAsDataURL(imagePath: string): Promise<string> {
     } else if (extension === 'webp') {
       mimeType = 'image/webp';
     }
-    
+
     return `data:${mimeType};base64,${base64}`;
   } catch (error) {
     console.error('Failed to load image:', imagePath, error);

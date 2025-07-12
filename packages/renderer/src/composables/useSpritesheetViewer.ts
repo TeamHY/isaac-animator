@@ -348,16 +348,17 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     }
   };
 
-  const loadSpritesheetImage = async (path: string) => {
-    if (!path || !mainSprite) return;
+  const loadSpritesheetImage = async (spritesheetId: number) => {
+    if (spritesheetId === null || !mainSprite) return;
 
-    console.log('Loading spritesheet image:', path);
+    console.log('Loading spritesheet image:', spritesheetId);
 
     try {
-      const texture = await Assets.load<Texture>(path);
-      texture.source.scaleMode = 'nearest';
+      const texture = animationState?.renderer?.getSpritesheetTexture(spritesheetId);
 
-      console.log('Image loaded successfully:', path, texture.width, 'x', texture.height);
+      if (!texture) {
+        throw new Error(`Spritesheet texture not found for ID: ${spritesheetId}`);
+      }
 
       currentTexture = texture;
       mainSprite.texture = texture;
@@ -501,8 +502,8 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
 
   // Watch for spritesheet changes
   watch(selectedSpritesheet, (newSpritesheet) => {
-    if (newSpritesheet) {
-      loadSpritesheetImage(`/${newSpritesheet.path}`);
+    if (newSpritesheet !== null) {
+      loadSpritesheetImage(newSpritesheet.id);
     }
   }, { immediate: true });
 
