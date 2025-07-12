@@ -24,6 +24,7 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
   let cameraOffset = { x: 0, y: 0 };
   let resizeObserver: ResizeObserver | null = null;
 
+  // 팬 드래그 핸들러
   const panDragHandler = useDragHandler({
     onDragMove: (event: MouseEvent, deltaX: number, deltaY: number) => {
       cameraOffset.x += deltaX;
@@ -57,12 +58,8 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
 
     if (!showCrosshair.value) return;
 
-    crosshairGraphics
-      .moveTo(-width, 0)
-      .lineTo(width, 0)
-      .moveTo(0, -height)
-      .lineTo(0, height)
-      .stroke({ width: 1, color: 0xcccccc, alpha: 0.5 });
+    crosshairGraphics.lineStyle(1, 0xcccccc, 0.5).moveTo(-width, 0).lineTo(width, 0);
+    crosshairGraphics.lineStyle(1, 0xcccccc, 0.5).moveTo(0, -height).lineTo(0, height);
   };
 
   const resizeRenderer = () => {
@@ -84,6 +81,7 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
       resizeObserver = new ResizeObserver(resizeRenderer);
       resizeObserver.observe(pixiContainer.value);
 
+      // cleanup 함수 등록
       addCleanup(() => {
         resizeObserver?.disconnect();
       });
@@ -115,6 +113,8 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
   };
 
   onMounted(async () => {
+    console.log('onMounted');
+    console.log(pixiContainer.value);
     if (!pixiContainer.value) return;
 
     try {
@@ -128,6 +128,19 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
 
       resizeRenderer();
 
+      const anm2Data = await Anm2Parser.parseFromUrl('/010.000_frowning gaper.anm2');
+      anm2Renderer = new Anm2Renderer(anm2Data);
+      stage.addChild(anm2Renderer.container);
+
+      await anm2Renderer.loadSpritesheets('/');
+
+      if (animationState) {
+        animationState.renderer = anm2Renderer;
+        animationState.availableAnimations = anm2Renderer.getAnimationNames();
+        animationState.currentAnimation = anm2Data.defaultAnimation;
+        animationState.setAnimation(animationState.currentAnimation);
+      }
+
       updateCamera();
 
       ticker = new Ticker();
@@ -139,6 +152,9 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
       });
       ticker.start();
 
+      anm2Renderer.stop();
+      isPlaying.value = false;
+
       crosshairGraphics = new Graphics();
       crosshairGraphics.zIndex = -1000;
       stage.addChild(crosshairGraphics);
@@ -147,6 +163,7 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
       setupZoomAndPan();
       setupResizeObserver();
 
+      // cleanup 함수들 등록
       addCleanup(() => {
         ticker?.destroy();
         anm2Renderer?.dispose();
@@ -155,7 +172,7 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
         renderer?.destroy();
       });
     } catch (error) {
-      console.error('Failed to initialize preview panel:', error);
+      console.error('Failed to load anm2 file:', error);
     }
   });
 
@@ -164,34 +181,6 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
     () => {
       if (anm2Renderer) {
         isPlaying.value = anm2Renderer.getIsPlaying();
-      }
-    },
-  );
-
-  watch(
-    () => animationState?.renderer,
-    (newRenderer: Anm2Renderer | null | undefined) => {
-      if (!stage) return;
-      
-      if (anm2Renderer && anm2Renderer !== newRenderer) {
-        try {
-          stage.removeChild(anm2Renderer.container);
-        } catch (error) {
-          console.warn('Failed to remove old renderer container:', error);
-        }
-      }
-      
-      anm2Renderer = newRenderer || null;
-      
-      if (anm2Renderer) {
-        try {
-          stage.addChild(anm2Renderer.container);
-          anm2Renderer.stop();
-          isPlaying.value = false;
-          updateCamera();
-        } catch (error) {
-          console.error('Failed to add new renderer container:', error);
-        }
       }
     },
   );

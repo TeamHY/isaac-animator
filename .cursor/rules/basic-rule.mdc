@@ -1,9 +1,0 @@
----
-description:
-globs:
-alwaysApply: true
----
-
-- 주석은 정말정말 필요한 부분만 남긴다. TODO 주석과는 관계없다.
-- 모든 주석은 영어로 작성한다.
-- UI도 영어로 작성한다.
