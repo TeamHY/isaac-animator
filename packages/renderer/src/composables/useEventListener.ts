@@ -8,8 +8,8 @@ export interface EventListenerConfig {
 }
 
 /**
- * 이벤트 리스너 관리 유틸리티 컴포저블
- * 이벤트 리스너의 추가/제거를 자동으로 관리
+ * Event listener management utility composable
+ * Automatically manages adding/removing event listeners
  */
 export function useEventListener() {
   const listeners: EventListenerConfig[] = [];

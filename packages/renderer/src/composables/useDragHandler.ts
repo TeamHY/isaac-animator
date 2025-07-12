@@ -8,8 +8,8 @@ export interface DragHandlerOptions {
 }
 
 /**
- * 드래그 핸들링 로직을 공통화하는 컴포저블
- * 마우스 드래그 이벤트를 처리하고 상태를 관리
+ * Common drag handling logic composable
+ * Handles mouse drag events and manages state
  */
 export function useDragHandler(options: DragHandlerOptions = {}) {
   const isDragging = ref(false);

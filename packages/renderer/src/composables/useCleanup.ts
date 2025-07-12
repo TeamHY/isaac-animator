@@ -3,8 +3,8 @@ import { onUnmounted } from 'vue';
 export type CleanupFunction = () => void;
 
 /**
- * 리소스 정리 관리 컴포저블
- * 컴포넌트가 언마운트될 때 자동으로 리소스를 정리
+ * Resource cleanup management composable
+ * Automatically cleans up resources when component unmounts
  */
 export function useCleanup() {
   const cleanupFunctions: CleanupFunction[] = [];

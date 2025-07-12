@@ -7,6 +7,7 @@ import {hardwareAccelerationMode} from './modules/HardwareAccelerationModule.js'
 import {autoUpdater} from './modules/AutoUpdater.js';
 import {allowInternalOrigins} from './modules/BlockNotAllowdOrigins.js';
 import {allowExternalUrls} from './modules/ExternalUrls.js';
+import {createMenuManagerModule} from './modules/MenuManager.js';
 
 
 export async function initApp(initConfig: AppInitConfig) {
@@ -16,6 +17,7 @@ export async function initApp(initConfig: AppInitConfig) {
     .init(disallowMultipleAppInstance())
     .init(terminateAppOnLastWindowClose())
     .init(hardwareAccelerationMode({enable: true}))
+    .init(createMenuManagerModule())
     .init(autoUpdater())
 
     // Install DevTools extension if needed

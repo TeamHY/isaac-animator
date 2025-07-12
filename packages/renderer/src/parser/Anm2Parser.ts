@@ -12,20 +12,17 @@ import type {
 } from '../types/anm2';
 
 export class Anm2Parser {
-  /**
-   * anm2 파일 내용을 파싱하여 Anm2Data 객체로 변환합니다.
-   */
   static parseFromString(xmlString: string): Anm2Data {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlString, "text/xml");
 
     if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
-      throw new Error("XML 파싱 오류가 발생했습니다");
+      throw new Error("XML parsing error occurred");
     }
 
     const animatedActor = xmlDoc.querySelector("AnimatedActor");
     if (!animatedActor) {
-      throw new Error("유효하지 않은 anm2 파일입니다");
+      throw new Error("Invalid anm2 file");
     }
 
     return {
@@ -36,17 +33,11 @@ export class Anm2Parser {
     };
   }
 
-  /**
-   * 파일에서 anm2 내용을 로드하고 파싱합니다.
-   */
   static async parseFromFile(file: File): Promise<Anm2Data> {
     const text = await file.text();
     return this.parseFromString(text);
   }
 
-  /**
-   * URL에서 anm2 파일을 로드하고 파싱합니다.
-   */
   static async parseFromUrl(url: string): Promise<Anm2Data> {
     const response = await fetch(url);
     const text = await response.text();
@@ -56,7 +47,7 @@ export class Anm2Parser {
   private static parseInfo(root: Element): Anm2Info {
     const info = root.querySelector("Info");
     if (!info) {
-      throw new Error("Info 섹션이 없습니다");
+      throw new Error("Info section not found");
     }
 
     return {
@@ -70,7 +61,7 @@ export class Anm2Parser {
   private static parseContent(root: Element): Anm2Content {
     const content = root.querySelector("Content");
     if (!content) {
-      throw new Error("Content 섹션이 없습니다");
+      throw new Error("Content section not found");
     }
 
     return {
@@ -133,7 +124,7 @@ export class Anm2Parser {
   private static parseRootAnimation(animation: Element): Anm2Frame {
     const rootAnim = animation.querySelector("RootAnimation Frame");
     if (!rootAnim) {
-      throw new Error("RootAnimation Frame이 없습니다");
+      throw new Error("RootAnimation Frame not found");
     }
     return this.parseFrame(rootAnim);
   }

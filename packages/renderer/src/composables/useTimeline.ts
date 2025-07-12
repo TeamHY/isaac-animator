@@ -26,9 +26,8 @@ export function useTimeline(
   const timelineWidth = ref(800);
   const playheadPosition = ref(0);
 
-  let refreshInterval: number | null = null;
+  let refreshInterval: ReturnType<typeof setInterval> | null = null;
 
-  // Timeline 드래그 핸들러 설정
   const timelineDragHandler = useDragHandler({
     cursor: 'grabbing',
     onDragStart: (event: MouseEvent) => {
@@ -53,7 +52,6 @@ export function useTimeline(
     },
   });
 
-  // Playhead 드래그 핸들러 설정
   const playheadDragHandler = useDragHandler({
     cursor: 'grabbing',
     onDragMove: (event: MouseEvent) => {
@@ -154,7 +152,6 @@ export function useTimeline(
     updateTimelineData();
     refreshInterval = setInterval(updateTimelineData, 1000 / 30);
 
-    // cleanup 함수 등록
     addCleanup(() => {
       if (refreshInterval) {
         clearInterval(refreshInterval);

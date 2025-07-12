@@ -107,7 +107,6 @@ interface ColorSectionProps {
 
 const props = defineProps<ColorSectionProps>();
 
-// 색상 미리 보기를 위한 computed 속성들
 const tintColorPreview = computed(() => {
   return `rgba(${props.tintR}, ${props.tintG}, ${props.tintB}, ${
     props.tintAlpha / 255
@@ -115,7 +114,7 @@ const tintColorPreview = computed(() => {
 });
 
 const offsetColorPreview = computed(() => {
-  // Offset은 보통 -255에서 255 사이의 값이므로 절댓값으로 색상 표현
+  // Offset values typically range from -255 to 255, use absolute values for color representation
   const r = Math.abs(props.offsetR);
   const g = Math.abs(props.offsetG);
   const b = Math.abs(props.offsetB);

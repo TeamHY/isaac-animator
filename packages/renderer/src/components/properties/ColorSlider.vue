@@ -192,7 +192,6 @@ const backgroundGradient = computed(() => {
   border-color: var(--border-color);
 }
 
-/* 특정 슬라이더 스타일 */
 .red-slider,
 .green-slider,
 .blue-slider {
@@ -231,7 +230,6 @@ const backgroundGradient = computed(() => {
   border: none;
 }
 
-/* 다크 모드 전용 스타일 */
 @media (prefers-color-scheme: dark) {
   .color-slider::-webkit-slider-thumb {
     background: #ffffff;

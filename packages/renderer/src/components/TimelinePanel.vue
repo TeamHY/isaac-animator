@@ -48,8 +48,6 @@ watch(playheadPosition, (newPos) => {
     timelineContainer.value.scrollLeft = newPos - containerWidth + 200;
   }
 });
-
-// useTimeline 컴포저블이 내부적으로 cleanup을 처리합니다
 </script>
 
 <template>

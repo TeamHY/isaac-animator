@@ -1,7 +1,5 @@
 import { onMounted, ref, watch, type Ref } from 'vue';
-import { WebGPURenderer, Ticker, Graphics, Container } from 'pixi.js';
-import { Anm2Parser } from '../parser/Anm2Parser';
-import { Anm2Renderer } from '../renderer/Anm2Renderer';
+import { WebGPURenderer, Ticker, Graphics, Container, Text } from 'pixi.js';
 import { useAnimationState } from './useAnimationState';
 import { useDragHandler } from './useDragHandler';
 import { useEventListener } from './useEventListener';
@@ -17,14 +15,13 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
   const showCrosshair = ref(false);
 
   let renderer: WebGPURenderer | null = null;
-  let anm2Renderer: Anm2Renderer | null = null;
+  let anm2Container: Container | null = null;
   let ticker: Ticker | null = null;
   let crosshairGraphics: Graphics | null = null;
   let stage: Container | null = null;
   let cameraOffset = { x: 0, y: 0 };
   let resizeObserver: ResizeObserver | null = null;
 
-  // 팬 드래그 핸들러
   const panDragHandler = useDragHandler({
     onDragMove: (event: MouseEvent, deltaX: number, deltaY: number) => {
       cameraOffset.x += deltaX;
@@ -34,14 +31,14 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
   });
 
   const updateCamera = () => {
-    if (!anm2Renderer || !renderer) return;
+    if (!anm2Container || !renderer) return;
 
     const centerX = renderer.screen.width / 2;
     const centerY = renderer.screen.height / 2;
 
-    anm2Renderer.container.scale.set(zoomLevel.value);
-    anm2Renderer.container.x = centerX + cameraOffset.x;
-    anm2Renderer.container.y = centerY + cameraOffset.y;
+    anm2Container.scale.set(zoomLevel.value);
+    anm2Container.x = centerX + cameraOffset.x;
+    anm2Container.y = centerY + cameraOffset.y;
 
     if (crosshairGraphics) {
       crosshairGraphics.scale.set(zoomLevel.value);
@@ -81,7 +78,6 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
       resizeObserver = new ResizeObserver(resizeRenderer);
       resizeObserver.observe(pixiContainer.value);
 
-      // cleanup 함수 등록
       addCleanup(() => {
         resizeObserver?.disconnect();
       });
@@ -113,10 +109,6 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
   };
 
   onMounted(async () => {
-    console.log('onMounted');
-    console.log(pixiContainer.value);
-    if (!pixiContainer.value) return;
-
     try {
       renderer = new WebGPURenderer();
       await renderer.init({
@@ -124,36 +116,22 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
       });
 
       stage = new Container();
-      pixiContainer.value.appendChild(renderer.canvas);
+      pixiContainer.value?.appendChild(renderer.canvas);
 
+      anm2Container = new Container();
+      stage.addChild(anm2Container);
+      
       resizeRenderer();
-
-      const anm2Data = await Anm2Parser.parseFromUrl('/010.000_frowning gaper.anm2');
-      anm2Renderer = new Anm2Renderer(anm2Data);
-      stage.addChild(anm2Renderer.container);
-
-      await anm2Renderer.loadSpritesheets('/');
-
-      if (animationState) {
-        animationState.renderer = anm2Renderer;
-        animationState.availableAnimations = anm2Renderer.getAnimationNames();
-        animationState.currentAnimation = anm2Data.defaultAnimation;
-        animationState.setAnimation(animationState.currentAnimation);
-      }
-
       updateCamera();
 
       ticker = new Ticker();
       ticker.add(() => {
-        if (anm2Renderer && renderer && stage) {
-          anm2Renderer.update();
+        if (renderer && stage) {
+          animationState?.renderer?.update();
           renderer.render(stage);
         }
       });
       ticker.start();
-
-      anm2Renderer.stop();
-      isPlaying.value = false;
 
       crosshairGraphics = new Graphics();
       crosshairGraphics.zIndex = -1000;
@@ -163,10 +141,8 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
       setupZoomAndPan();
       setupResizeObserver();
 
-      // cleanup 함수들 등록
       addCleanup(() => {
         ticker?.destroy();
-        anm2Renderer?.dispose();
         crosshairGraphics?.destroy();
         stage?.destroy();
         renderer?.destroy();
@@ -177,10 +153,12 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
   });
 
   watch(
-    () => animationState?.currentAnimation,
+    () => animationState?.renderer,
     () => {
-      if (anm2Renderer) {
-        isPlaying.value = anm2Renderer.getIsPlaying();
+      if (animationState?.renderer) {
+        anm2Container?.addChild(animationState.renderer.container);
+        anm2Container?._onUpdate();
+        resetZoom();
       }
     },
   );
@@ -199,13 +177,13 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
   };
 
   const togglePlay = () => {
-    if (!anm2Renderer) return;
-    if (anm2Renderer.getIsPlaying()) {
-      anm2Renderer.pause();
+    if (!anm2Container) return;
+    if (animationState?.renderer?.getIsPlaying()) {
+      animationState.renderer?.pause();
     } else {
-      anm2Renderer.play();
+      animationState?.renderer?.play();
     }
-    isPlaying.value = anm2Renderer.getIsPlaying();
+    isPlaying.value = !!animationState?.renderer?.getIsPlaying();
   };
 
   return {

@@ -348,16 +348,17 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     }
   };
 
-  const loadSpritesheetImage = async (path: string) => {
-    if (!path || !mainSprite) return;
+  const loadSpritesheetImage = async (spritesheetId: number) => {
+    if (spritesheetId === null || !mainSprite) return;
 
-    console.log('Loading spritesheet image:', path);
+    console.log('Loading spritesheet image:', spritesheetId);
 
     try {
-      const texture = await Assets.load<Texture>(path);
-      texture.source.scaleMode = 'nearest';
+      const texture = animationState?.renderer?.getSpritesheetTexture(spritesheetId);
 
-      console.log('Image loaded successfully:', path, texture.width, 'x', texture.height);
+      if (!texture) {
+        throw new Error(`Spritesheet texture not found for ID: ${spritesheetId}`);
+      }
 
       currentTexture = texture;
       mainSprite.texture = texture;
@@ -433,7 +434,6 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
       resizeObserver = new ResizeObserver(resizeRenderer);
       resizeObserver.observe(pixiContainer.value);
 
-      // cleanup 함수 등록
       addCleanup(() => {
         resizeObserver?.disconnect();
       });
@@ -476,7 +476,6 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
       });
       ticker.start();
 
-      // Event listeners
       addEventListener(renderer.canvas, 'mousemove', onMouseMove);
       addEventListener(renderer.canvas, 'wheel', onWheel);
       addEventListener(renderer.canvas, 'mousedown', onMouseDown);
@@ -485,7 +484,6 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
 
       updateBackground();
 
-      // Cleanup
       addCleanup(() => {
         ticker?.destroy();
         textureBorderGraphics?.destroy();
@@ -501,8 +499,8 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
 
   // Watch for spritesheet changes
   watch(selectedSpritesheet, (newSpritesheet) => {
-    if (newSpritesheet) {
-      loadSpritesheetImage(`/${newSpritesheet.path}`);
+    if (newSpritesheet !== null) {
+      loadSpritesheetImage(newSpritesheet.id);
     }
   }, { immediate: true });
 
