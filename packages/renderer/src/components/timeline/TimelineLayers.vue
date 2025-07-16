@@ -166,4 +166,4 @@ const emit = defineEmits(['select-layer']);
 }
 
 /* Dark mode is handled by CSS variables */
-</style> 
+</style>

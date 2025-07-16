@@ -21,6 +21,7 @@ export function useTimeline(
   const isPlaying = ref(false);
   const animationName = ref('');
   const layerStates = ref<LayerState[]>([]);
+  const isLooping = ref(false);
 
   // UI state
   const timelineWidth = ref(800);
@@ -32,7 +33,7 @@ export function useTimeline(
     cursor: 'grabbing',
     onDragStart: (event: MouseEvent) => {
       if (!timelineContainer.value) return;
-      
+
       const rect = timelineContainer.value.getBoundingClientRect();
       const clickX = event.clientX - rect.left + timelineContainer.value.scrollLeft;
       const targetFrame = Math.round((clickX - FRAME_WIDTH / 2) / FRAME_WIDTH);
@@ -56,7 +57,7 @@ export function useTimeline(
     cursor: 'grabbing',
     onDragMove: (event: MouseEvent) => {
       if (!timelineContainer.value || !animationState?.renderer) return;
-      
+
       const rect = timelineContainer.value.getBoundingClientRect();
       const currentX = event.clientX - rect.left + timelineContainer.value.scrollLeft;
       const newFrame = Math.round((currentX - FRAME_WIDTH / 2) / FRAME_WIDTH);
@@ -76,6 +77,7 @@ export function useTimeline(
       isPlaying.value = anm2Renderer.getIsPlaying();
       animationName.value = anm2Renderer.getCurrentAnimationName();
       layerStates.value = anm2Renderer.getCurrentLayerStates();
+      isLooping.value = anm2Renderer.getCurrentAnimation()?.loop ?? false;
 
       playheadPosition.value = currentFrame.value * FRAME_WIDTH + FRAME_WIDTH / 2;
     } catch (error) {
@@ -140,7 +142,7 @@ export function useTimeline(
 
       if (animationState.renderer && layerId >= 0) {
         const selectedLayer = getLayerById(layerId);
-        
+
         if (selectedLayer && selectedLayer.type === 'layer' && selectedLayer.data.spritesheetId !== undefined) {
           animationState.selectedSpritesheetId = selectedLayer.data.spritesheetId;
         }
@@ -185,5 +187,6 @@ export function useTimeline(
     selectLayer,
     layerHeight: LAYER_HEIGHT,
     frameWidth: FRAME_WIDTH,
+    isLooping,
   };
-} 
+}

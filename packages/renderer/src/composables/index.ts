@@ -4,6 +4,11 @@ export { useDragHandler } from './useDragHandler';
 export { useEventListener } from './useEventListener';
 export { useCleanup } from './useCleanup';
 
+// Application-level composables
+export { useAppState } from './useAppState';
+export { useFileHandler } from './useFileHandler';
+export { useDockviewSetup } from './useDockviewSetup';
+
 // Feature-specific composables
 export { useAnimationList } from './useAnimationList';
 export { usePreviewPanel } from './usePreviewPanel';
@@ -15,4 +20,4 @@ export { useSpritesheetViewer } from './useSpritesheetViewer';
 // Type definitions
 export type { DragHandlerOptions } from './useDragHandler';
 export type { EventListenerConfig } from './useEventListener';
-export type { CleanupFunction } from './useCleanup'; 
+export type { CleanupFunction } from './useCleanup';

@@ -31,6 +31,7 @@ const {
   selectLayer,
   layerHeight,
   frameWidth,
+  isLooping,
 } = useTimeline(timelineContainer, layersContainer);
 
 watch(playheadPosition, (newPos) => {
@@ -58,6 +59,7 @@ watch(playheadPosition, (newPos) => {
       :total-frames="totalFrames"
       :fps="fps"
       :is-playing="isPlaying"
+      :is-looping="isLooping"
       @toggle-playback="togglePlayback"
       @stop-playback="stopPlayback"
     />
@@ -127,7 +129,7 @@ watch(playheadPosition, (newPos) => {
         <!-- Click Event Catcher -->
         <div
           class="timeline-click-area"
-          :style="{ 
+          :style="{
             height: `${layerStates.length * layerHeight + 30}px`,
             width: `${totalFrames * frameWidth + frameWidth}px`
           }"

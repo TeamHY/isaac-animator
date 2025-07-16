@@ -5,6 +5,7 @@ defineProps<{
   totalFrames: number;
   fps: number;
   isPlaying: boolean;
+  isLooping: boolean;
 }>();
 
 const emit = defineEmits(['toggle-playback', 'stop-playback']);
@@ -19,6 +20,15 @@ const emit = defineEmits(['toggle-playback', 'stop-playback']);
     </div>
 
     <div class="playback-controls">
+      <div class="loop-control">
+        <input
+          type="checkbox"
+          :checked="isLooping"
+          disabled
+          id="timeline-loop"
+        />
+        <label for="timeline-loop">Loop</label>
+      </div>
       <button @click="emit('stop-playback')" class="control-btn">⏹</button>
       <button @click="emit('toggle-playback')" class="control-btn">
         {{ isPlaying ? '⏸' : '▶' }}
@@ -62,6 +72,34 @@ const emit = defineEmits(['toggle-playback', 'stop-playback']);
 .playback-controls {
   display: flex;
   gap: 6px;
+  align-items: center;
+}
+
+.loop-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 4px;
+  padding: 4px 8px;
+  border-radius: var(--border-radius-small);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+}
+
+.loop-control input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  cursor: not-allowed;
+  accent-color: var(--primary-color);
+}
+
+.loop-control label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-color-muted);
+  cursor: not-allowed;
+  user-select: none;
 }
 
 .control-btn {
@@ -92,4 +130,4 @@ const emit = defineEmits(['toggle-playback', 'stop-playback']);
 }
 
 /* Dark mode is handled by CSS variables */
-</style> 
+</style>

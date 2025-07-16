@@ -5,6 +5,7 @@ import type { LayerState } from '../types/animation';
 export class Anm2Renderer {
   private anm2Data: Anm2Data;
   private spritesheetTextures: Map<number, Texture> = new Map();
+  private spritesheetDataURLs: Map<number, string> = new Map();
   private currentAnimation: string = '';
   private currentFrame: number = 0;
   private isPlaying: boolean = false;
@@ -27,6 +28,8 @@ export class Anm2Renderer {
   }
 
   async loadSpritesheets(dataURLs: Map<number, string>): Promise<void> {
+    this.spritesheetDataURLs = new Map(dataURLs);
+
     const loadPromises = this.anm2Data.content.spritesheets.map(async (spritesheet) => {
       try {
         const texture = await Assets.load<Texture<TextureSource<any>>>(dataURLs.get(spritesheet.id) ?? '');
@@ -144,6 +147,10 @@ export class Anm2Renderer {
 
   getSpritesheetTexture(spritesheetId: number): Texture | undefined {
     return this.spritesheetTextures.get(spritesheetId);
+  }
+
+  getSpritesheetDataURL(spritesheetId: number): string | null {
+    return this.spritesheetDataURLs.get(spritesheetId) || null;
   }
 
   update(): void {

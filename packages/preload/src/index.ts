@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, join, normalize } from 'node:path';
 import {sha256sum} from './nodeCrypto.js';
 import {versions} from './versions.js';
 import {ipcRenderer} from 'electron';
@@ -16,6 +16,14 @@ export function getDirectoryPath(filePath: string): string {
 
 export function joinPath(...paths: string[]): string {
   return join(...paths);
+}
+
+export function normalizePath(path: string): string {
+  if (process.platform === 'darwin') {
+    return path.replace(/\\/g, '/');
+  }
+
+  return path;
 }
 
 export async function loadImageAsDataURL(imagePath: string): Promise<string> {

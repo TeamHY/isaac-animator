@@ -9,6 +9,11 @@ export function useSpritesheetList() {
     return animationState?.renderer?.getSpritesheets() || [];
   });
 
+  const getSpritesheetThumbnail = (spritesheetId: number) => {
+    if (!animationState?.renderer) return null;
+    return animationState.renderer.getSpritesheetDataURL(spritesheetId);
+  };
+
   const selectSpritesheet = (spritesheetId: number) => {
     if (animationState) {
       animationState.selectedSpritesheetId = spritesheetId;
@@ -17,10 +22,10 @@ export function useSpritesheetList() {
 
   const getSpritesheetUsage = (spritesheetId: number) => {
     if (!animationState?.renderer) return { layers: [], isUsed: false };
-    
+
     const layers = animationState.renderer.getLayers();
     const usedLayers = layers.filter((layer: Anm2Layer) => layer.spritesheetId === spritesheetId);
-    
+
     return {
       layers: usedLayers,
       isUsed: usedLayers.length > 0
@@ -32,5 +37,6 @@ export function useSpritesheetList() {
     spritesheets,
     selectSpritesheet,
     getSpritesheetUsage,
+    getSpritesheetThumbnail,
   };
-} 
+}

@@ -6,7 +6,7 @@ defineProps<{
   params: IDockviewPanelProps;
 }>();
 
-const { animationState, selectAnimation, defaultAnimationName } = useAnimationList();
+const { animationState, selectAnimation, defaultAnimationName, getAnimationInfo } = useAnimationList();
 </script>
 
 <template>
@@ -21,8 +21,13 @@ const { animationState, selectAnimation, defaultAnimationName } = useAnimationLi
       }"
       @click="selectAnimation(animation)"
     >
-      <span class="animation-name">{{ animation }}</span>
-      <span v-if="animation === defaultAnimationName" class="default-indicator">⭐</span>
+      <div class="animation-info">
+        <span class="animation-name">{{ animation }}</span>
+        <div class="animation-indicators">
+          <span v-if="animation === defaultAnimationName" class="default-indicator">⭐</span>
+          <span v-if="getAnimationInfo(animation)?.loop" class="loop-indicator">🔁</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -77,6 +82,13 @@ const { animationState, selectAnimation, defaultAnimationName } = useAnimationLi
   color: var(--primary-color);
 }
 
+.animation-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
 .animation-name {
   flex: 1;
   text-overflow: ellipsis;
@@ -84,11 +96,22 @@ const { animationState, selectAnimation, defaultAnimationName } = useAnimationLi
   white-space: nowrap;
 }
 
+.animation-indicators {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
 .default-indicator {
   color: var(--warning-color);
   font-size: 12px;
-  margin-left: 8px;
-  flex-shrink: 0;
+}
+
+.loop-indicator {
+  color: var(--text-color-muted);
+  font-size: 12px;
 }
 
 /* Scrollbar styling */

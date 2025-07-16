@@ -6,7 +6,7 @@ defineProps<{
   params: IDockviewPanelProps;
 }>();
 
-const { animationState, spritesheets, selectSpritesheet, getSpritesheetUsage } = useSpritesheetList();
+const { animationState, spritesheets, selectSpritesheet, getSpritesheetUsage, getSpritesheetThumbnail } = useSpritesheetList();
 </script>
 
 <template>
@@ -21,6 +21,13 @@ const { animationState, spritesheets, selectSpritesheet, getSpritesheetUsage } =
       }"
       @click="selectSpritesheet(spritesheet.id)"
     >
+      <img
+        v-if="getSpritesheetThumbnail(spritesheet.id)"
+        :src="getSpritesheetThumbnail(spritesheet.id) || ''"
+        class="spritesheet-thumbnail"
+        alt=""
+      />
+      <div v-else class="spritesheet-thumbnail placeholder"></div>
       <div class="spritesheet-main">
         <span class="spritesheet-name">{{ spritesheet.path }}</span>
         <span class="spritesheet-id">ID: {{ spritesheet.id }}</span>
@@ -57,7 +64,7 @@ const { animationState, spritesheets, selectSpritesheet, getSpritesheetUsage } =
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
+  padding: 6px 8px;
   margin-bottom: 3px;
   border-radius: var(--border-radius-small);
   cursor: pointer;
@@ -158,4 +165,23 @@ const { animationState, spritesheets, selectSpritesheet, getSpritesheetUsage } =
 .spritesheet-list-panel::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
 }
-</style> 
+
+.spritesheet-thumbnail {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  margin-right: 8px;
+  border-radius: var(--border-radius-xs);
+  background-color: var(--bg-color-darker);
+  object-fit: contain;
+  border: 1px solid var(--border-color);
+}
+
+.spritesheet-thumbnail.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color-muted);
+  font-size: 18px;
+}
+</style>
