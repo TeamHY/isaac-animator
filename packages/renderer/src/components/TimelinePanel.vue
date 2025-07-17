@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import type { IDockviewPanelProps } from 'dockview-vue';
-import { useTimeline } from '../composables/useTimeline';
-import TimelineHeader from './timeline/TimelineHeader.vue';
-import TimelineLayers from './timeline/TimelineLayers.vue';
+import { ref, watch } from "vue";
+import type { IDockviewPanelProps } from "dockview-vue";
+import { useTimeline } from "../composables/useTimeline";
+import TimelineHeader from "./timeline/TimelineHeader.vue";
+import TimelineLayers from "./timeline/TimelineLayers.vue";
+import { SplitterGroup, SplitterPanel, SplitterResizeHandle } from "reka-ui";
 
 defineProps<{
   params: IDockviewPanelProps;
@@ -64,79 +65,90 @@ watch(playheadPosition, (newPos) => {
       @stop-playback="stopPlayback"
     />
 
-    <div class="timeline-main">
-      <TimelineLayers
-        ref="layersContainer"
-        :layer-states="layerStates"
-        :selected-layer-id="animationState?.selectedLayerId ?? null"
-        :layer-height="layerHeight"
-        :frame-width="frameWidth"
-        @select-layer="selectLayer"
-      />
+    <SplitterGroup class="timeline-main" direction="horizontal">
+      <SplitterPanel :min-size="20" :default-size="30">
+        <TimelineLayers
+          ref="layersContainer"
+          :layer-states="layerStates"
+          :selected-layer-id="animationState?.selectedLayerId ?? null"
+          :layer-height="layerHeight"
+          :frame-width="frameWidth"
+          @select-layer="selectLayer"
+        />
+      </SplitterPanel>
 
-      <div class="timeline-container" ref="timelineContainer">
-        <div class="timeline-content" :style="{ width: `${totalFrames * frameWidth + frameWidth}px` }">
-          <!-- Ruler -->
-          <div class="timeline-ruler">
-            <div
-              v-for="frame in timelineFrames"
-              :key="frame.frame"
-              class="frame-marker"
-              :class="{ 'key-frame': frame.isKeyFrame }"
-              :style="{ left: `${frame.x}px` }"
-            >
-              <span v-if="frame.label" class="frame-label">{{ frame.label }}</span>
-            </div>
-          </div>
+      <SplitterResizeHandle />
 
-          <!-- Layer Tracks -->
-          <div class="timeline-tracks">
-            <div
-              v-for="(layer, index) in layerStates"
-              :key="layer.layerId"
-              class="track"
-              :style="{ top: `${index * layerHeight - 1}px` }"
-            >
-              <!-- Keyframes -->
+      <SplitterPanel :min-size="20" :default-size="80">
+        <div class="timeline-container" ref="timelineContainer">
+          <div
+            class="timeline-content"
+            :style="{ width: `${totalFrames * frameWidth + frameWidth}px` }"
+          >
+            <!-- Ruler -->
+            <div class="timeline-ruler">
               <div
-                v-for="keyframe in getLayerKeyframes(layer)"
-                :key="`${layer.layerId}-${keyframe.frame}`"
-                class="keyframe"
-                :style="{ left: `${keyframe.x}px` }"
+                v-for="frame in timelineFrames"
+                :key="frame.frame"
+                class="frame-marker"
+                :class="{ 'key-frame': frame.isKeyFrame }"
+                :style="{ left: `${frame.x}px` }"
               >
-                <div class="keyframe-dot"></div>
+                <span v-if="frame.label" class="frame-label">{{
+                  frame.label
+                }}</span>
               </div>
             </div>
-          </div>
 
-          <!-- Playhead -->
-          <div
-            class="playhead"
-            :style="{
-              left: `${playheadPosition}px`,
-              height: `${layerStates.length * layerHeight + 30}px`,
-            }"
-          >
+            <!-- Layer Tracks -->
+            <div class="timeline-tracks">
+              <div
+                v-for="(layer, index) in layerStates"
+                :key="layer.layerId"
+                class="track"
+                :style="{ top: `${index * layerHeight - 1}px` }"
+              >
+                <!-- Keyframes -->
+                <div
+                  v-for="keyframe in getLayerKeyframes(layer)"
+                  :key="`${layer.layerId}-${keyframe.frame}`"
+                  class="keyframe"
+                  :style="{ left: `${keyframe.x}px` }"
+                >
+                  <div class="keyframe-dot"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Playhead -->
             <div
-              class="playhead-handle"
-              :class="{ dragging: isDraggingPlayhead }"
-              @mousedown="onPlayheadMouseDown"
-            ></div>
-            <div class="playhead-line"></div>
+              class="playhead"
+              :style="{
+                left: `${playheadPosition}px`,
+                height: `${layerStates.length * layerHeight + 30}px`,
+              }"
+            >
+              <div
+                class="playhead-handle"
+                :class="{ dragging: isDraggingPlayhead }"
+                @mousedown="onPlayheadMouseDown"
+              ></div>
+              <div class="playhead-line"></div>
+            </div>
           </div>
-        </div>
 
-        <!-- Click Event Catcher -->
-        <div
-          class="timeline-click-area"
-          :style="{
-            height: `${layerStates.length * layerHeight + 30}px`,
-            width: `${totalFrames * frameWidth + frameWidth}px`
-          }"
-          @mousedown="onTimelineMouseDown"
-        ></div>
-      </div>
-    </div>
+          <!-- Click Event Catcher -->
+          <div
+            class="timeline-click-area"
+            :style="{
+              height: `${layerStates.length * layerHeight + 30}px`,
+              width: `${totalFrames * frameWidth + frameWidth}px`,
+            }"
+            @mousedown="onTimelineMouseDown"
+          ></div>
+        </div>
+      </SplitterPanel>
+    </SplitterGroup>
   </div>
 </template>
 
@@ -147,7 +159,8 @@ watch(playheadPosition, (newPos) => {
   height: 100%;
   background-color: var(--bg-color);
   color: var(--text-color);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Helvetica Neue", Arial, sans-serif;
 }
 
 .timeline-main {
@@ -157,6 +170,7 @@ watch(playheadPosition, (newPos) => {
 }
 
 .timeline-container {
+  height: 100%;
   flex: 1;
   position: relative;
   background-color: var(--bg-white);
