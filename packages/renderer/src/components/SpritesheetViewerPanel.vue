@@ -16,7 +16,6 @@ const {
   zoomLevel,
   showGrid,
   backgroundColor,
-  showCropHighlight,
   mousePosition,
   imageSize,
   selectedSpritesheet,

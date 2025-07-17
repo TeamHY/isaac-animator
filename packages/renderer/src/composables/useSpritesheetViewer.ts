@@ -48,13 +48,6 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
   });
 
   const currentLayerCropInfo = computed(() => {
-    console.log('Computing currentLayerCropInfo:', {
-      selectedLayerId: animationState?.selectedLayerId,
-      hasRenderer: !!animationState?.renderer,
-      selectedSpritesheet: selectedSpritesheet.value?.path,
-      selectedSpritesheetId: selectedSpritesheet.value?.id
-    });
-
     if (animationState?.selectedLayerId === null ||
         !animationState?.renderer ||
         !selectedSpritesheet.value) {
@@ -64,11 +57,6 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
 
     // Get the selected layer info from layer states
     const layerStates = animationState.renderer.getCurrentLayerStates();
-    console.log('Layer states:', layerStates.map(l => ({
-      id: l.layerId,
-      name: l.layerName,
-      hasFrame: !!l.currentFrame
-    })));
 
     const selectedLayer = layerStates.find(layer => layer.layerId === animationState.selectedLayerId);
 
@@ -87,12 +75,6 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     if (animationState.selectedLayerId !== null && animationState.selectedLayerId >= 0) {
       const layerInfo = getSelectedLayer();
 
-      console.log('Layer info:', {
-        layerInfo,
-        layerSpritesheetId: layerInfo?.type === 'layer' ? layerInfo.data.spritesheetId : undefined,
-        selectedSpritesheetId: selectedSpritesheet.value.id
-      });
-
       if (!layerInfo || layerInfo.type !== 'layer' || layerInfo.data.spritesheetId !== selectedSpritesheet.value.id) {
         console.log('Layer does not use this spritesheet');
         return null; // Layer doesn't use this spritesheet
@@ -104,7 +86,6 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     }
 
     const frameData = selectedLayer.currentFrame;
-    console.log('Frame data:', frameData);
 
     // Validate crop data exists
     if (frameData.xCrop === undefined || frameData.yCrop === undefined ||
@@ -120,7 +101,6 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
       height: frameData.height,
     };
 
-    console.log('Returning crop info:', cropInfo);
     return cropInfo;
   });
 
@@ -293,17 +273,10 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     }
 
     if (!currentTexture) {
-      console.log('No current texture loaded');
       return;
     }
 
     if (!currentLayerCropInfo.value) {
-      console.log('No crop info available:', {
-        selectedLayerId: animationState?.selectedLayerId,
-        selectedSpritesheetId: animationState?.selectedSpritesheetId,
-        selectedSpritesheet: selectedSpritesheet.value?.path,
-        hasRenderer: !!animationState?.renderer
-      });
       return;
     }
 
@@ -324,8 +297,6 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
         textureSize: { width: currentTexture.width, height: currentTexture.height }
       });
     }
-
-    console.log('Drawing crop highlight:', crop);
 
     const scale = zoomLevel.value;
     const borderWidth = Math.max(1, 3 / scale);
@@ -350,8 +321,6 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
 
   const loadSpritesheetImage = async (spritesheetId: number) => {
     if (spritesheetId === null || !mainSprite) return;
-
-    console.log('Loading spritesheet image:', spritesheetId);
 
     try {
       const texture = animationState?.renderer?.getSpritesheetTexture(spritesheetId);
@@ -441,8 +410,6 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
   };
 
   onMounted(async () => {
-    console.log('onMounted');
-    console.log(pixiContainer.value);
     if (!pixiContainer.value) return;
 
     try {

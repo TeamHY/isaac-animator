@@ -106,6 +106,9 @@ const {
         :visible="visible"
         :interpolated="interpolated"
         :duration="duration"
+        @update:visible="updateVisible"
+        @update:interpolated="updateInterpolated"
+        @update:duration="updateDuration"
       />
 
       <!-- Color Section -->

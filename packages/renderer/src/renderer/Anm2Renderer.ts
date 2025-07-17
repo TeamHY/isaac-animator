@@ -209,6 +209,85 @@ export class Anm2Renderer {
     }
   }
 
+  // 보간을 위한 헬퍼 함수들
+  private lerp(a: number, b: number, t: number): number {
+    return a + (b - a) * t;
+  }
+
+  private lerpColor(color1: number, color2: number, t: number): number {
+    return Math.round(this.lerp(color1, color2, t));
+  }
+
+  private interpolateFrame(currentFrame: Anm2Frame, nextFrame: Anm2Frame, t: number): Anm2Frame {
+    return {
+      xPosition: this.lerp(currentFrame.xPosition, nextFrame.xPosition, t),
+      yPosition: this.lerp(currentFrame.yPosition, nextFrame.yPosition, t),
+      xPivot: currentFrame.xPivot,
+      yPivot: currentFrame.yPivot,
+      xCrop: currentFrame.xCrop,
+      yCrop: currentFrame.yCrop,
+      width: currentFrame.width,
+      height: currentFrame.height,
+      xScale: this.lerp(currentFrame.xScale, nextFrame.xScale, t),
+      yScale: this.lerp(currentFrame.yScale, nextFrame.yScale, t),
+      delay: currentFrame.delay,
+      visible: currentFrame.visible,
+      redTint: this.lerpColor(currentFrame.redTint, nextFrame.redTint, t),
+      greenTint: this.lerpColor(currentFrame.greenTint, nextFrame.greenTint, t),
+      blueTint: this.lerpColor(currentFrame.blueTint, nextFrame.blueTint, t),
+      alphaTint: this.lerpColor(currentFrame.alphaTint, nextFrame.alphaTint, t),
+      redOffset: this.lerpColor(currentFrame.redOffset, nextFrame.redOffset, t),
+      greenOffset: this.lerpColor(currentFrame.greenOffset, nextFrame.greenOffset, t),
+      blueOffset: this.lerpColor(currentFrame.blueOffset, nextFrame.blueOffset, t),
+      rotation: this.lerp(currentFrame.rotation, nextFrame.rotation, t),
+      interpolated: currentFrame.interpolated
+    };
+  }
+
+  private findCurrentAndNextFrame(frames: Anm2Frame[]): { currentFrame: Anm2Frame; nextFrame: Anm2Frame | null; frameProgress: number; frameIndex: number } | null {
+    if (frames.length === 0) return null;
+
+    if (frames.length === 1) {
+      return {
+        currentFrame: frames[0],
+        nextFrame: null,
+        frameProgress: 0,
+        frameIndex: 0
+      };
+    }
+
+    let totalDelay = 0;
+    let frameIndex = 0;
+
+    for (let i = 0; i < frames.length; i++) {
+      const frame = frames[i];
+      const frameEnd = totalDelay + frame.delay;
+
+      if (this.currentFrame < frameEnd) {
+        const frameProgress = (this.currentFrame - totalDelay) / frame.delay;
+        const nextFrame = i + 1 < frames.length ? frames[i + 1] : null;
+
+        return {
+          currentFrame: frame,
+          nextFrame,
+          frameProgress: Math.max(0, Math.min(1, frameProgress)),
+          frameIndex: i
+        };
+      }
+
+      totalDelay = frameEnd;
+      frameIndex = i;
+    }
+
+    // 마지막 프레임 반환
+    return {
+      currentFrame: frames[frames.length - 1],
+      nextFrame: null,
+      frameProgress: 1,
+      frameIndex: frames.length - 1
+    };
+  }
+
   private updateLayerFrame(layerAnim: Anm2LayerAnimation): void {
     const sprite = this.layerSprites.get(layerAnim.layerId);
     const container = this.layerContainers.get(layerAnim.layerId);
@@ -222,28 +301,18 @@ export class Anm2Renderer {
       return;
     }
 
-    // Find the frame for current animation time
-    let targetFrame: Anm2Frame | null = null;
+    const frameInfo = this.findCurrentAndNextFrame(layerAnim.frames);
+    if (!frameInfo) return;
 
-    if (layerAnim.frames.length === 1) {
-      targetFrame = layerAnim.frames[0];
+    const { currentFrame, nextFrame, frameProgress } = frameInfo;
+
+    // interpolated가 true이고 다음 프레임이 있으면 보간 적용
+    let targetFrame: Anm2Frame;
+    if (currentFrame.interpolated && nextFrame && frameProgress > 0) {
+      targetFrame = this.interpolateFrame(currentFrame, nextFrame, frameProgress);
     } else {
-      // Find frame based on delay accumulation
-      let totalDelay = 0;
-      for (const frame of layerAnim.frames) {
-        totalDelay += frame.delay;
-        if (this.currentFrame < totalDelay) {
-          targetFrame = frame;
-          break;
-        }
-      }
-
-      if (!targetFrame) {
-        targetFrame = layerAnim.frames[layerAnim.frames.length - 1];
-      }
+      targetFrame = currentFrame;
     }
-
-    if (!targetFrame) return;
 
     this.applyFrameToSprite(sprite, targetFrame, layerAnim.layerId);
   }
@@ -261,28 +330,18 @@ export class Anm2Renderer {
       return;
     }
 
-    // Find the frame for current animation time
-    let targetFrame: Anm2Frame | null = null;
+    const frameInfo = this.findCurrentAndNextFrame(nullAnim.frames);
+    if (!frameInfo) return;
 
-    if (nullAnim.frames.length === 1) {
-      targetFrame = nullAnim.frames[0];
+    const { currentFrame, nextFrame, frameProgress } = frameInfo;
+
+    // interpolated가 true이고 다음 프레임이 있으면 보간 적용
+    let targetFrame: Anm2Frame;
+    if (currentFrame.interpolated && nextFrame && frameProgress > 0) {
+      targetFrame = this.interpolateFrame(currentFrame, nextFrame, frameProgress);
     } else {
-      // Find frame based on delay accumulation
-      let totalDelay = 0;
-      for (const frame of nullAnim.frames) {
-        totalDelay += frame.delay;
-        if (this.currentFrame < totalDelay) {
-          targetFrame = frame;
-          break;
-        }
-      }
-
-      if (!targetFrame) {
-        targetFrame = nullAnim.frames[nullAnim.frames.length - 1];
-      }
+      targetFrame = currentFrame;
     }
-
-    if (!targetFrame) return;
 
     this.applyFrameToNull(graphics, container, targetFrame);
   }

@@ -5,13 +5,13 @@
         <CheckboxField
           label="Visible"
           :checked="visible"
-          disabled
+          @update:checked="$emit('update:visible', $event)"
           id="visible"
         />
         <CheckboxField
           label="Interpolated"
           :checked="interpolated"
-          disabled
+          @update:checked="$emit('update:interpolated', $event)"
           id="interpolated"
         />
       </div>
@@ -22,7 +22,7 @@
         label="Duration"
         :value="duration"
         type="number"
-        readonly
+        @update:value="$emit('update:duration', parseInt($event))"
       />
     </div>
   </PropertySection>
@@ -40,6 +40,12 @@ interface AnimationSectionProps {
 }
 
 defineProps<AnimationSectionProps>();
+
+defineEmits<{
+  'update:visible': [value: boolean];
+  'update:interpolated': [value: boolean];
+  'update:duration': [value: number];
+}>();
 </script>
 
 <style scoped>
@@ -53,4 +59,4 @@ defineProps<AnimationSectionProps>();
   display: flex;
   gap: 12px;
 }
-</style> 
+</style>
