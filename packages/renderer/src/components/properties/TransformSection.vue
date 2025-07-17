@@ -6,13 +6,13 @@
           label="Position X"
           :value="positionX"
           type="number"
-          readonly
+          @update:value="updatePositionX"
         />
         <InputField
           label="Position Y"
           :value="positionY"
           type="number"
-          readonly
+          @update:value="updatePositionY"
         />
       </div>
     </div>
@@ -23,13 +23,13 @@
           label="Scale X"
           :value="scaleX"
           type="number"
-          readonly
+          @update:value="updateScaleX"
         />
         <InputField
           label="Scale Y"
           :value="scaleY"
           type="number"
-          readonly
+          @update:value="updateScaleY"
         />
       </div>
     </div>
@@ -39,7 +39,7 @@
         label="Rotation"
         :value="rotation"
         type="number"
-        readonly
+        @update:value="updateRotation"
       />
     </div>
   </PropertySection>
@@ -55,6 +55,11 @@ interface TransformSectionProps {
   scaleX: number;
   scaleY: number;
   rotation: number;
+  updatePositionX: (value: string) => void;
+  updatePositionY: (value: string) => void;
+  updateScaleX: (value: string) => void;
+  updateScaleY: (value: string) => void;
+  updateRotation: (value: string) => void;
 }
 
 defineProps<TransformSectionProps>();
@@ -71,4 +76,4 @@ defineProps<TransformSectionProps>();
   display: flex;
   gap: 8px;
 }
-</style> 
+</style>

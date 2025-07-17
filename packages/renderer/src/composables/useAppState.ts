@@ -1,4 +1,4 @@
-import { provide, reactive } from "vue";
+import { provide, reactive, computed, watch } from "vue";
 import type { AnimationState } from "../types/animation";
 import type { Anm2Data } from "../types/anm2";
 import { Anm2Renderer } from "../renderer/Anm2Renderer";
@@ -76,7 +76,6 @@ export function useAppState() {
 
   provide("animationState", animationState);
 
-  // 히스토리 관련 함수들
   const saveState = (description?: string) => {
     if (!historyManager.isRecording || !animationState.renderer) {
       return;
@@ -91,12 +90,10 @@ export function useAppState() {
 
     historyManager.undoStack.push(historyState);
 
-    // 스택 크기 제한
     if (historyManager.undoStack.length > historyManager.maxHistorySize) {
       historyManager.undoStack.shift();
     }
 
-    // redo 스택 초기화 (새로운 액션이 수행되면 redo 불가)
     historyManager.redoStack.length = 0;
   };
 
@@ -210,6 +207,10 @@ export function useAppState() {
     };
   };
 
+  // Reactive canUndo/canRedo 상태
+  const canUndoState = computed(() => canUndo());
+  const canRedoState = computed(() => canRedo());
+
   const setRenderer = (renderer: Anm2Renderer | null) => {
     if (animationState.renderer) {
       animationState.renderer.dispose();
@@ -248,6 +249,8 @@ export function useAppState() {
     redo,
     canUndo,
     canRedo,
+    canUndoState,
+    canRedoState,
     clearHistory,
     setHistoryRecording,
     getHistoryInfo,

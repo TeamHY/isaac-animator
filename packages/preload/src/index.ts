@@ -77,3 +77,19 @@ export function onMenuSaveAsFile(callback: (filePath: string) => void) {
   ipcRenderer.on('menu-save-as-file', listener);
   return () => ipcRenderer.removeListener('menu-save-as-file', listener);
 }
+
+export function onMenuUndo(callback: () => void) {
+  const listener = () => callback();
+  ipcRenderer.on('menu-undo', listener);
+  return () => ipcRenderer.removeListener('menu-undo', listener);
+}
+
+export function onMenuRedo(callback: () => void) {
+  const listener = () => callback();
+  ipcRenderer.on('menu-redo', listener);
+  return () => ipcRenderer.removeListener('menu-redo', listener);
+}
+
+export function updateMenuState(canUndo: boolean, canRedo: boolean) {
+  ipcRenderer.send('update-menu-state', { canUndo, canRedo });
+}

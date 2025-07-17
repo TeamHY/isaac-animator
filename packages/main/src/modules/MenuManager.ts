@@ -1,19 +1,21 @@
 import type {AppModule} from '../AppModule.js';
 import {ModuleContext} from '../ModuleContext.js';
-import {Menu, MenuItem, shell, dialog, BrowserWindow} from 'electron';
+import {Menu, MenuItem, shell, dialog, BrowserWindow, ipcMain} from 'electron';
 import {join} from 'path';
 import {readFile} from 'fs/promises';
 
 class MenuManager implements AppModule {
+
   async enable({app}: ModuleContext): Promise<void> {
     await app.whenReady();
     this.setupApplicationMenu(app);
     this.setupContextMenu(app);
+    this.setupMenuStateListener();
   }
 
   private setupApplicationMenu(app: Electron.App): void {
     const isMac = process.platform === 'darwin';
-    
+
     const template: Electron.MenuItemConstructorOptions[] = [
       // App menu (macOS only)
       ...(isMac ? [{
@@ -30,7 +32,7 @@ class MenuManager implements AppModule {
           { role: 'quit' as const }
         ]
       }] : []),
-      
+
       {
         label: 'File',
         submenu: [
@@ -58,12 +60,22 @@ class MenuManager implements AppModule {
           ...(isMac ? [] : [{ role: 'quit' as const }])
         ]
       },
-      
+
       {
         label: 'Edit',
         submenu: [
-          { role: 'undo' as const },
-          { role: 'redo' as const },
+          {
+            label: 'Undo',
+            accelerator: 'CmdOrCtrl+Z',
+            enabled: false,
+            click: () => this.handleUndo()
+          },
+          {
+            label: 'Redo',
+            accelerator: 'CmdOrCtrl+Shift+Z',
+            enabled: false,
+            click: () => this.handleRedo()
+          },
           { type: 'separator' as const },
           { role: 'cut' as const },
           { role: 'copy' as const },
@@ -87,7 +99,7 @@ class MenuManager implements AppModule {
           ])
         ]
       },
-      
+
       {
         label: 'View',
         submenu: [
@@ -102,7 +114,7 @@ class MenuManager implements AppModule {
           { role: 'togglefullscreen' as const }
         ]
       },
-      
+
       {
         label: 'Window',
         submenu: [
@@ -116,7 +128,7 @@ class MenuManager implements AppModule {
           ] : [])
         ]
       },
-      
+
       {
         role: 'help',
         submenu: [
@@ -214,6 +226,45 @@ class MenuManager implements AppModule {
     }
   }
 
+  private async handleUndo(): Promise<void> {
+    const focusedWindow = BrowserWindow.getFocusedWindow();
+    if (focusedWindow) {
+      focusedWindow.webContents.send('menu-undo');
+    }
+  }
+
+  private async handleRedo(): Promise<void> {
+    const focusedWindow = BrowserWindow.getFocusedWindow();
+    if (focusedWindow) {
+      focusedWindow.webContents.send('menu-redo');
+    }
+  }
+
+  private setupMenuStateListener(): void {
+    ipcMain.on('update-menu-state', (_, { canUndo, canRedo }) => {
+      this.updateMenuState(canUndo, canRedo);
+    });
+  }
+
+  private updateMenuState(canUndo: boolean, canRedo: boolean): void {
+    const menu = Menu.getApplicationMenu();
+    if (!menu) return;
+
+    // Find and update Undo menu item
+    const editMenu = menu.items.find(item => item.label === 'Edit');
+    if (editMenu && editMenu.submenu) {
+      const undoItem = editMenu.submenu.items.find(item => item.label === 'Undo');
+      const redoItem = editMenu.submenu.items.find(item => item.label === 'Redo');
+
+      if (undoItem) {
+        undoItem.enabled = canUndo;
+      }
+      if (redoItem) {
+        redoItem.enabled = canRedo;
+      }
+    }
+  }
+
   private handleAbout(): void {
     const focusedWindow = BrowserWindow.getFocusedWindow();
     dialog.showMessageBox(focusedWindow || undefined as any, {
@@ -228,4 +279,4 @@ class MenuManager implements AppModule {
 
 export function createMenuManagerModule(): MenuManager {
   return new MenuManager();
-} 
+}

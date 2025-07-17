@@ -44,6 +44,17 @@ const emit = defineEmits(['select-layer']);
 </template>
 
 <style scoped>
+.timeline-layers-container {
+  height: 100%;
+  background-color: var(--bg-color);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  overflow: hidden;
+}
+
 .layers-panel {
   width: 200px;
   background-color: var(--bg-color);

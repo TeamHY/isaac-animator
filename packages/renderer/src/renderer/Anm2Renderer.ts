@@ -521,6 +521,133 @@ export class Anm2Renderer {
     return this.anm2Data.defaultAnimation;
   }
 
+  updateCurrentFrameProperty(layerId: number, property: keyof Anm2Frame, value: any): boolean {
+    const animation = this.getCurrentAnimation();
+    if (!animation) return false;
+
+    // Handle both regular layers (positive ID) and null layers (negative ID)
+    if (layerId >= 0) {
+      const layerAnim = animation.layerAnimations.find(la => la.layerId === layerId);
+      if (!layerAnim || layerAnim.frames.length === 0) return false;
+
+      // Find current frame based on animation time
+      let targetFrameIndex = 0;
+      if (layerAnim.frames.length > 1) {
+        let totalDelay = 0;
+        for (let i = 0; i < layerAnim.frames.length; i++) {
+          totalDelay += layerAnim.frames[i].delay;
+          if (this.currentFrame < totalDelay) {
+            targetFrameIndex = i;
+            break;
+          }
+        }
+        if (targetFrameIndex === 0 && this.currentFrame >= totalDelay) {
+          targetFrameIndex = layerAnim.frames.length - 1;
+        }
+      }
+
+      // Update the property
+      (layerAnim.frames[targetFrameIndex] as any)[property] = value;
+    } else {
+      // Handle null layers (convert negative ID back to original null ID)
+      const originalNullId = -(layerId + 1);
+      const nullAnim = animation.nullAnimations.find(na => na.nullId === originalNullId);
+      if (!nullAnim || nullAnim.frames.length === 0) return false;
+
+      // Find current frame based on animation time
+      let targetFrameIndex = 0;
+      if (nullAnim.frames.length > 1) {
+        let totalDelay = 0;
+        for (let i = 0; i < nullAnim.frames.length; i++) {
+          totalDelay += nullAnim.frames[i].delay;
+          if (this.currentFrame < totalDelay) {
+            targetFrameIndex = i;
+            break;
+          }
+        }
+        if (targetFrameIndex === 0 && this.currentFrame >= totalDelay) {
+          targetFrameIndex = nullAnim.frames.length - 1;
+        }
+      }
+
+      // Update the property
+      (nullAnim.frames[targetFrameIndex] as any)[property] = value;
+    }
+
+    // Refresh the display
+    this.updateFrame();
+    return true;
+  }
+
+  getCurrentFrameForLayer(layerId: number): Anm2Frame | null {
+    const animation = this.getCurrentAnimation();
+    if (!animation) return null;
+
+    // Handle both regular layers (positive ID) and null layers (negative ID)
+    if (layerId >= 0) {
+      const layerAnim = animation.layerAnimations.find(la => la.layerId === layerId);
+      if (!layerAnim || layerAnim.frames.length === 0) return null;
+
+      // Find current frame based on animation time
+      if (layerAnim.frames.length === 1) {
+        return layerAnim.frames[0];
+      }
+
+      let totalDelay = 0;
+      for (const frame of layerAnim.frames) {
+        totalDelay += frame.delay;
+        if (this.currentFrame < totalDelay) {
+          return frame;
+        }
+      }
+      return layerAnim.frames[layerAnim.frames.length - 1];
+    } else {
+      // Handle null layers (convert negative ID back to original null ID)
+      const originalNullId = -(layerId + 1);
+      const nullAnim = animation.nullAnimations.find(na => na.nullId === originalNullId);
+      if (!nullAnim || nullAnim.frames.length === 0) return null;
+
+      // Find current frame based on animation time
+      if (nullAnim.frames.length === 1) {
+        return nullAnim.frames[0];
+      }
+
+      let totalDelay = 0;
+      for (const frame of nullAnim.frames) {
+        totalDelay += frame.delay;
+        if (this.currentFrame < totalDelay) {
+          return frame;
+        }
+      }
+      return nullAnim.frames[nullAnim.frames.length - 1];
+    }
+  }
+
+  updateAnm2Data(newData: Anm2Data): void {
+    this.anm2Data = newData;
+
+    // Clear existing containers and sprites
+    this.container.removeChildren();
+    this.layerContainers.clear();
+    this.layerSprites.clear();
+    this.nullContainers.clear();
+    this.nullGraphics.clear();
+
+    // Reinitialize with new data
+    this.initializeLayers();
+    this.initializeNulls();
+
+    // Refresh the current animation
+    if (this.anm2Data.animations.find(anim => anim.name === this.currentAnimation)) {
+      this.updateFrame();
+    } else {
+      // If current animation no longer exists, switch to default
+      this.currentAnimation = this.anm2Data.defaultAnimation;
+      this.currentFrame = 0;
+      this.updateFrame();
+    }
+  }
+
   dispose(): void {
     this.container.destroy({ children: true });
     this.spritesheetTextures.clear();

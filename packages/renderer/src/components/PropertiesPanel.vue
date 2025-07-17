@@ -6,9 +6,8 @@ import AnimationSection from "./properties/AnimationSection.vue";
 import ColorSection from "./properties/ColorSection.vue";
 
 const {
-  animationState,
   selectedLayerName,
-  isSelectedLayerNull,
+  isNullLayerSelected,
   cropX,
   cropY,
   width,
@@ -30,6 +29,28 @@ const {
   offsetG,
   offsetB,
   tintAlpha,
+  // 업데이트 함수들
+  updateCropX,
+  updateCropY,
+  updateWidth,
+  updateHeight,
+  updatePositionX,
+  updatePositionY,
+  updatePivotX,
+  updatePivotY,
+  updateScaleX,
+  updateScaleY,
+  updateRotation,
+  updateVisible,
+  updateInterpolated,
+  updateDuration,
+  updateTintR,
+  updateTintG,
+  updateTintB,
+  updateTintAlpha,
+  updateOffsetR,
+  updateOffsetG,
+  updateOffsetB,
 } = usePropertiesPanel();
 </script>
 
@@ -40,7 +61,7 @@ const {
       <div class="header-title">
         <div class="layer-info">
           <h3 class="layer-name">{{ selectedLayerName }}</h3>
-          <span v-if="isSelectedLayerNull" class="layer-type-badge"
+          <span v-if="isNullLayerSelected" class="layer-type-badge"
             >Null Layer</span
           >
         </div>
@@ -56,17 +77,28 @@ const {
         :scale-x="scaleX"
         :scale-y="scaleY"
         :rotation="rotation"
+        :update-position-x="updatePositionX"
+        :update-position-y="updatePositionY"
+        :update-scale-x="updateScaleX"
+        :update-scale-y="updateScaleY"
+        :update-rotation="updateRotation"
       />
 
       <!-- Appearance Section (for non-null layers) -->
       <AppearanceSection
-        v-if="!isSelectedLayerNull"
+        v-if="!isNullLayerSelected"
         :crop-x="cropX"
         :crop-y="cropY"
         :width="width"
         :height="height"
         :pivot-x="pivotX"
         :pivot-y="pivotY"
+        :update-crop-x="updateCropX"
+        :update-crop-y="updateCropY"
+        :update-width="updateWidth"
+        :update-height="updateHeight"
+        :update-pivot-x="updatePivotX"
+        :update-pivot-y="updatePivotY"
       />
 
       <!-- Animation Section -->

@@ -6,13 +6,13 @@
           label="Crop X"
           :value="cropX"
           type="text"
-          readonly
+          @update:value="updateCropX"
         />
         <InputField
           label="Crop Y"
           :value="cropY"
           type="text"
-          readonly
+          @update:value="updateCropY"
         />
       </div>
     </div>
@@ -23,13 +23,13 @@
           label="Width"
           :value="width"
           type="text"
-          readonly
+          @update:value="updateWidth"
         />
         <InputField
           label="Height"
           :value="height"
           type="text"
-          readonly
+          @update:value="updateHeight"
         />
       </div>
     </div>
@@ -40,13 +40,13 @@
           label="Pivot X"
           :value="pivotX"
           type="text"
-          readonly
+          @update:value="updatePivotX"
         />
         <InputField
           label="Pivot Y"
           :value="pivotY"
           type="text"
-          readonly
+          @update:value="updatePivotY"
         />
       </div>
     </div>
@@ -64,6 +64,12 @@ interface AppearanceSectionProps {
   height: string;
   pivotX: string;
   pivotY: string;
+  updateCropX: (value: string) => void;
+  updateCropY: (value: string) => void;
+  updateWidth: (value: string) => void;
+  updateHeight: (value: string) => void;
+  updatePivotX: (value: string) => void;
+  updatePivotY: (value: string) => void;
 }
 
 defineProps<AppearanceSectionProps>();
@@ -80,4 +86,4 @@ defineProps<AppearanceSectionProps>();
   display: flex;
   gap: 8px;
 }
-</style> 
+</style>
