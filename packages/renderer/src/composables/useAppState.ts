@@ -1,4 +1,4 @@
-import { provide, reactive, computed } from "vue";
+import { reactive, computed, provide } from "vue";
 import type { AnimationState } from "../types/animation";
 import type { Anm2Data } from "../types/anm2";
 import { Anm2Renderer } from "../renderer/Anm2Renderer";
@@ -9,6 +9,8 @@ import {
 
 interface HistoryState {
   anm2Data: Anm2Data;
+  selectedLayerId: number | null;
+  currentFrame: number;
   timestamp: number;
   description?: string;
 }
@@ -24,60 +26,57 @@ function deepCloneAnm2Data(data: Anm2Data): Anm2Data {
   return JSON.parse(JSON.stringify(data));
 }
 
+const history: History = reactive({
+  undoStack: [],
+  redoStack: [],
+  maxHistorySize: 50,
+});
+
+const animationState: AnimationState = reactive({
+  anm2Path: "",
+  renderer: null,
+  availableAnimations: [],
+  currentAnimation: "",
+  selectedLayerId: null,
+  selectedSpritesheetId: null,
+  currentFrame: 0,
+  setAnimation: (name: string) => {
+    if (animationState.renderer) {
+      animationState.renderer.setAnimation(name);
+      animationState.currentAnimation = name;
+      animationState.currentFrame = 0;
+    }
+  },
+  setSelectedLayer: (layerId: number | null) => {
+    animationState.selectedLayerId = layerId;
+  },
+  getCurrentFrameData: () => {
+    if (!animationState.renderer || animationState.selectedLayerId === null) {
+      return null;
+    }
+
+    const layerStates = animationState.renderer.getCurrentLayerStates();
+    const selectedLayerState = layerStates.find(
+      (state: any) => state.layerId === animationState.selectedLayerId
+    );
+
+    return selectedLayerState?.currentFrame || null;
+  },
+  getSelectedLayerName: () => {
+    if (!animationState.renderer || animationState.selectedLayerId === null) {
+      return "";
+    }
+
+    const layerStates = animationState.renderer.getCurrentLayerStates();
+    const selectedLayerState = layerStates.find(
+      (state: any) => state.layerId === animationState.selectedLayerId
+    );
+
+    return selectedLayerState?.layerName || "";
+  },
+});
+
 export function useAppState() {
-  const history: History = reactive({
-    undoStack: [],
-    redoStack: [],
-    maxHistorySize: 50,
-  });
-
-  const animationState: AnimationState = reactive({
-    anm2Path: "",
-    renderer: null,
-    availableAnimations: [],
-    currentAnimation: "",
-    selectedLayerId: null,
-    selectedSpritesheetId: null,
-    currentFrame: 0,
-    setAnimation: (name: string) => {
-      if (animationState.renderer) {
-        animationState.renderer.setAnimation(name);
-        animationState.currentAnimation = name;
-        animationState.currentFrame = 0;
-      }
-    },
-    setSelectedLayer: (layerId: number | null) => {
-      animationState.selectedLayerId = layerId;
-    },
-    getCurrentFrameData: () => {
-      if (!animationState.renderer || animationState.selectedLayerId === null) {
-        return null;
-      }
-
-      const layerStates = animationState.renderer.getCurrentLayerStates();
-      const selectedLayerState = layerStates.find(
-        (state: any) => state.layerId === animationState.selectedLayerId
-      );
-
-      return selectedLayerState?.currentFrame || null;
-    },
-    getSelectedLayerName: () => {
-      if (!animationState.renderer || animationState.selectedLayerId === null) {
-        return "";
-      }
-
-      const layerStates = animationState.renderer.getCurrentLayerStates();
-      const selectedLayerState = layerStates.find(
-        (state: any) => state.layerId === animationState.selectedLayerId
-      );
-
-      return selectedLayerState?.layerName || "";
-    },
-  });
-
-  provide("history", history);
-  provide("animationState", animationState);
-
   const saveState = (description?: string) => {
     if (!animationState.renderer) {
       return;
@@ -86,6 +85,8 @@ export function useAppState() {
     const currentData = animationState.renderer.getAnm2Data();
     const historyState: HistoryState = {
       anm2Data: deepCloneAnm2Data(currentData),
+      selectedLayerId: animationState.selectedLayerId,
+      currentFrame: animationState.currentFrame,
       timestamp: Date.now(),
       description: description || "State change",
     };
@@ -100,25 +101,18 @@ export function useAppState() {
   };
 
   const undo = async (): Promise<boolean> => {
-    if (history.undoStack.length === 0 || !animationState.renderer) {
+    if (history.undoStack.length <= 1 || !animationState.renderer) {
       return false;
     }
 
-    const currentData = animationState.renderer.getAnm2Data();
-    const currentState: HistoryState = {
-      anm2Data: deepCloneAnm2Data(currentData),
-      timestamp: Date.now(),
-      description: "Current state",
-    };
-    history.redoStack.push(currentState);
-
-    const previousState = history.undoStack.pop();
-    if (previousState) {
-      await restoreState(previousState.anm2Data);
-      return true;
+    const currentState = history.undoStack.pop();
+    if (currentState) {
+      history.redoStack.push(currentState);
     }
 
-    return false;
+    const previousState = history.undoStack[history.undoStack.length - 1];
+    await restoreState(previousState);
+    return true;
   };
 
   const redo = async (): Promise<boolean> => {
@@ -126,27 +120,22 @@ export function useAppState() {
       return false;
     }
 
-    const currentData = animationState.renderer.getAnm2Data();
-    const currentState: HistoryState = {
-      anm2Data: deepCloneAnm2Data(currentData),
-      timestamp: Date.now(),
-      description: "Current state",
-    };
-    history.undoStack.push(currentState);
-
     const nextState = history.redoStack.pop();
     if (nextState) {
-      await restoreState(nextState.anm2Data);
+      history.undoStack.push(nextState);
+      await restoreState(nextState);
       return true;
     }
 
     return false;
   };
 
-  const restoreState = async (anm2Data: Anm2Data) => {
+  const restoreState = async (historyState: HistoryState) => {
     if (!animationState.renderer) {
       return;
     }
+
+    const { anm2Data, selectedLayerId, currentFrame } = historyState;
 
     const spritesheets: SpritesheetDataMap = new Map();
 
@@ -178,7 +167,7 @@ export function useAppState() {
 
     animationState.renderer.dispose();
 
-    animationState.renderer = new Anm2Renderer(anm2Data, spritesheets);
+    animationState.renderer = new Anm2Renderer(deepCloneAnm2Data(anm2Data), spritesheets);
     animationState.availableAnimations =
       animationState.renderer.getAnimationNames();
 
@@ -191,10 +180,13 @@ export function useAppState() {
     }
 
     animationState.renderer.setAnimation(animationState.currentAnimation);
+    animationState.selectedLayerId = selectedLayerId;
+    animationState.currentFrame = currentFrame;
+    animationState.renderer.setCurrentFrame(currentFrame);
   };
 
   const canUndo = computed(() => {
-    return history.undoStack.length > 0;
+    return history.undoStack.length > 1;
   });
 
   const canRedo = computed(() => {
@@ -221,8 +213,11 @@ export function useAppState() {
     animationState.renderer = renderer;
     animationState.anm2Path = anm2Path;
 
+    clearHistory();
+
     if (renderer) {
       animationState.availableAnimations = renderer.getAnimationNames();
+      saveState("Initial state");
     } else {
       animationState.availableAnimations = [];
     }

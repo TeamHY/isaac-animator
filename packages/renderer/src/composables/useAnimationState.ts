@@ -1,6 +1,5 @@
-import { inject } from 'vue';
-import type { AnimationState } from '../types/animation';
 import type { Anm2Layer, Anm2Null } from '../types/anm2';
+import { useAppState } from './useAppState';
 
 /**
  * Unified type that contains layer or null information
@@ -19,11 +18,7 @@ export type LayerInfo = {
  * Unifies animationState inject logic used across all composables
  */
 export function useAnimationState() {
-  const animationState = inject<AnimationState>('animationState');
-
-  if (!animationState) {
-    console.warn('AnimationState not found in provide/inject context');
-  }
+  const {animationState} = useAppState()
 
   /**
    * Gets information for the currently selected layer
@@ -48,7 +43,7 @@ export function useAnimationState() {
     }
 
     const anm2Data = animationState.renderer.getAnm2Data();
-    
+
     if (layerId >= 0) {
       const layer = anm2Data.content.layers.find(l => l.id === layerId);
       return layer ? { type: 'layer', data: layer } : null;
@@ -65,4 +60,4 @@ export function useAnimationState() {
     getSelectedLayer,
     getLayerById,
   };
-} 
+}
