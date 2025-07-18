@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@app/main": "*",
-    "dockview-vue": "^4.4.0",
+    "dockview-vue": "^4.4.1",
     "pixi.js": "^8.11.0",
     "reka-ui": "^2.3.2"
   }
