@@ -13,6 +13,7 @@ interface HistoryState {
   currentFrame: number;
   timestamp: number;
   description?: string;
+  key?: string;
 }
 
 interface History {
@@ -81,7 +82,7 @@ const animationState: AnimationState = reactive({
 });
 
 export function useAppState() {
-  const saveState = (description?: string) => {
+  const saveState = (description?: string, key?: string) => {
     if (!animationState.renderer) {
       return;
     }
@@ -93,9 +94,15 @@ export function useAppState() {
       currentFrame: animationState.currentFrame,
       timestamp: Date.now(),
       description: description || "State change",
+      key,
     };
 
-    history.undoStack.push(historyState);
+    const lastState = history.undoStack[history.undoStack.length - 1];
+    if (key && lastState && lastState.key === key) {
+      history.undoStack[history.undoStack.length - 1] = historyState;
+    } else {
+      history.undoStack.push(historyState);
+    }
 
     if (history.undoStack.length > history.maxHistorySize) {
       history.undoStack.shift();

@@ -85,7 +85,8 @@ export function usePropertiesPanel() {
     );
 
     if (success) {
-      saveState(description || `Update ${property}`);
+      const key = `prop-${animationState.selectedLayerId}-${animationState.currentFrame}-${property}`;
+      saveState(description || `Update ${property}`, key);
     }
   };
 
