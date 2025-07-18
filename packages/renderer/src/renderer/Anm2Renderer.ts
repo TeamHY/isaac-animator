@@ -1,6 +1,6 @@
 import { Container, Sprite, Texture, Assets, Rectangle, TextureSource, Graphics } from 'pixi.js';
 import type { Anm2Data, Anm2Animation, Anm2LayerAnimation, Anm2NullAnimation, Anm2Frame } from '../types/anm2';
-import type { LayerState } from '../types/animation';
+import type { LayerState, SelectedKeyframe } from '../types/animation';
 import type { SpritesheetData, SpritesheetDataMap } from '../utils/spritesheetData';
 
 export class Anm2Renderer {
@@ -439,122 +439,119 @@ export class Anm2Renderer {
     const animation = this.getCurrentAnimation();
     if (!animation) return [];
 
-    const layerStates: LayerState[] = animation.layerAnimations.map((layerAnim): LayerState => {
-      const layer = this.getLayerById(layerAnim.layerId);
-      const spritesheet = this.anm2Data.content.spritesheets.find(s => s.id === layer?.spritesheetId);
+    return this.anm2Data.content.layers.map(layer => {
+      const layerAnim = animation.layerAnimations.find(la => la.layerId === layer.id);
+      const isNullLayer = !layer.hasOwnProperty('spritesheetId');
 
-      // Find frame data for current animation time
-      let currentFrameData = null;
-      if (layerAnim.frames.length === 1) {
-        currentFrameData = layerAnim.frames[0];
-      } else {
-        let totalDelay = 0;
-        for (const frame of layerAnim.frames) {
-          totalDelay += frame.delay;
-          if (this.currentFrame < totalDelay) {
-            currentFrameData = frame;
-            break;
-          }
-        }
-        if (!currentFrameData && layerAnim.frames.length > 0) {
-          currentFrameData = layerAnim.frames[layerAnim.frames.length - 1];
-        }
+      let currentFrameData: Anm2Frame | null = null;
+      if (layerAnim) {
+        currentFrameData = this.getCurrentFrameForLayer(layer.id);
       }
 
       return {
-        layerId: layerAnim.layerId,
-        layerName: layer?.name || `Layer ${layerAnim.layerId}`,
-        visible: layerAnim.visible,
-        spritesheetPath: spritesheet?.path || 'N/A',
-        frameCount: layerAnim.frames.length,
+        layerId: layer.id,
+        layerName: layer.name,
+        spritesheetId: isNullLayer ? undefined : layer.spritesheetId,
+        visible: layerAnim ? layerAnim.visible : false,
+        isNullLayer: isNullLayer,
+        originalNullId: isNullLayer ? layer.id : undefined,
         currentFrame: currentFrameData,
-        isCurrentlyVisible: layerAnim.visible && (currentFrameData?.visible ?? false),
-        isNullLayer: false
       };
-    });
-
-    // Add null states (convert ID to negative to distinguish from layers)
-    const nullStates: LayerState[] = animation.nullAnimations.map((nullAnim): LayerState => {
-      const nullItem = this.getNullById(nullAnim.nullId);
-
-      // Find frame data for current animation time
-      let currentFrameData = null;
-      if (nullAnim.frames.length === 1) {
-        currentFrameData = nullAnim.frames[0];
-      } else {
-        let totalDelay = 0;
-        for (const frame of nullAnim.frames) {
-          totalDelay += frame.delay;
-          if (this.currentFrame < totalDelay) {
-            currentFrameData = frame;
-            break;
-          }
-        }
-        if (!currentFrameData && nullAnim.frames.length > 0) {
-          currentFrameData = nullAnim.frames[nullAnim.frames.length - 1];
-        }
-      }
-
-      return {
-        layerId: -(nullAnim.nullId + 1), // Convert null ID to negative (0 → -1, 1 → -2, ...)
-        layerName: nullItem?.name || `Null ${nullAnim.nullId}`,
-        visible: nullAnim.visible,
-        spritesheetPath: 'N/A',
-        frameCount: nullAnim.frames.length,
-        currentFrame: currentFrameData,
-        isCurrentlyVisible: nullAnim.visible && (currentFrameData?.visible ?? false),
-        isNullLayer: true,
-        originalNullId: nullAnim.nullId
-      };
-    });
-
-    return [...layerStates, ...nullStates];
+    }).reverse();
   }
 
-  getLayerKeyframes(layerId: number) {
+  getLayerKeyframes(layerId: number): Anm2Frame[] {
     const animation = this.getCurrentAnimation();
     if (!animation) return [];
 
-    // Positive for regular layers, negative for null layers
-    if (layerId >= 0) {
-      const layerAnim = animation.layerAnimations.find(la => la.layerId === layerId);
-      if (layerAnim) {
-        const keyframes = [];
-        let currentAnimFrame = 0;
-
-        for (const frame of layerAnim.frames) {
-          keyframes.push({
-            animationFrame: currentAnimFrame,
-            frameData: frame,
-            delay: frame.delay
-          });
-          currentAnimFrame += frame.delay;
-        }
-
-        return keyframes;
-      }
-    } else {
-      // Convert negative ID back to original null ID
-      const originalNullId = -(layerId + 1); // -1 → 0, -2 → 1, ...
-      const nullAnim = animation.nullAnimations.find(na => na.nullId === originalNullId);
-      if (nullAnim) {
-        const keyframes = [];
-        let currentAnimFrame = 0;
-
-        for (const frame of nullAnim.frames) {
-          keyframes.push({
-            animationFrame: currentAnimFrame,
-            frameData: frame,
-            delay: frame.delay
-          });
-          currentAnimFrame += frame.delay;
-        }
-
-        return keyframes;
-      }
+    const layerAnim = animation.layerAnimations.find(la => la.layerId === layerId);
+    if (layerAnim) {
+      return layerAnim.frames;
     }
-
     return [];
+  }
+
+  moveKeyframes(movedKeyframes: Map<string, SelectedKeyframe>): void {
+    const animation = this.getCurrentAnimation();
+    if (!animation) return;
+
+    const keyframesByLayer: Map<number, { oldFrame: number, newFrame: number }[]> = new Map();
+
+    // Group keyframes by layerId
+    movedKeyframes.forEach((newKeyframe, oldKey) => {
+      const [layerIdStr, oldFrameStr] = oldKey.split(':');
+      const layerId = parseInt(layerIdStr, 10);
+      const oldFrame = parseInt(oldFrameStr, 10);
+
+      if (!keyframesByLayer.has(layerId)) {
+        keyframesByLayer.set(layerId, []);
+      }
+      keyframesByLayer.get(layerId)!.push({ oldFrame, newFrame: newKeyframe.frame });
+    });
+
+    keyframesByLayer.forEach((keyframes, layerId) => {
+      const layerAnim = animation.layerAnimations.find(la => la.layerId === layerId);
+      if (!layerAnim) return;
+
+      const framesToRemove = keyframes.map(k => k.oldFrame);
+      const framesToAdd: Anm2Frame[] = [];
+
+      let currentAnimFrame = 0;
+      const newFrames: Anm2Frame[] = [];
+
+      for (const frame of layerAnim.frames) {
+        if (framesToRemove.includes(currentAnimFrame)) {
+          const keyframeInfo = keyframes.find(k => k.oldFrame === currentAnimFrame);
+          if (keyframeInfo) {
+            // This is a moved keyframe, save its data to add later
+            framesToAdd.push({ ...frame, delay: keyframeInfo.newFrame });
+          }
+        } else {
+          newFrames.push(frame);
+        }
+        currentAnimFrame += frame.delay;
+      }
+
+      // This logic is getting complex. For now, let's just remove and add.
+      // A proper implementation would need to adjust delays of surrounding frames.
+
+      const tempFrames: { frameData: Anm2Frame, animFrame: number }[] = [];
+
+      // Collect frames to keep
+      currentAnimFrame = 0;
+      for (const frame of layerAnim.frames) {
+        if (!framesToRemove.includes(currentAnimFrame)) {
+          tempFrames.push({ frameData: frame, animFrame: currentAnimFrame });
+        }
+        currentAnimFrame += frame.delay;
+      }
+
+      // Collect frames to add (the moved ones)
+      for (const keyframe of keyframes) {
+        const oldFrameData = layerAnim.frames.find((f, i) => {
+          let frameStart = 0;
+          for(let j=0; j<i; j++) frameStart += layerAnim.frames[j].delay;
+          return frameStart === keyframe.oldFrame;
+        });
+        if(oldFrameData) {
+          tempFrames.push({ frameData: oldFrameData, animFrame: keyframe.newFrame });
+        }
+      }
+
+      // Sort by new animation frame
+      tempFrames.sort((a, b) => a.animFrame - b.animFrame);
+
+      // Recalculate delays and build the new frames array
+      layerAnim.frames = [];
+      let lastFrameTime = 0;
+      for(const tempFrame of tempFrames) {
+        const newDelay = tempFrame.animFrame - lastFrameTime;
+        layerAnim.frames.push({ ...tempFrame.frameData, delay: newDelay });
+        lastFrameTime = tempFrame.animFrame;
+      }
+    });
+
+    this.updateFrame();
   }
 
   getIsPlaying(): boolean {

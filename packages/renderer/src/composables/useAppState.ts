@@ -39,6 +39,7 @@ const animationState: AnimationState = reactive({
   currentAnimation: "",
   selectedLayerId: null,
   selectedSpritesheetId: null,
+  selectedFrames: new Set(),
   currentFrame: 0,
   setAnimation: (name: string) => {
     if (animationState.renderer) {
@@ -49,6 +50,9 @@ const animationState: AnimationState = reactive({
   },
   setSelectedLayer: (layerId: number | null) => {
     animationState.selectedLayerId = layerId;
+  },
+  setSelectedFrames: (frames: Set<string>) => {
+    animationState.selectedFrames = frames;
   },
   getCurrentFrameData: () => {
     if (!animationState.renderer || animationState.selectedLayerId === null) {
@@ -235,6 +239,7 @@ export function useAppState() {
     animationState.selectedLayerId = null;
     animationState.selectedSpritesheetId = null;
     animationState.currentFrame = 0;
+    animationState.selectedFrames = new Set();
 
     clearHistory();
   };

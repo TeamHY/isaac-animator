@@ -70,9 +70,17 @@
   --shadow-heavy: 0 3px 8px rgba(0, 0, 0, 0.3);
 
   /* Keyframe colors */
-  --keyframe-color: #0066cc;
-  --keyframe-border: #004499;
-  --keyframe-hover: #3385ff;
+  --keyframe-color: #ffca28;
+  --keyframe-color-hover: #ffd54f;
+  --keyframe-color-selected: #ffb300;
+  --keyframe-border: #e6a700;
+
+  /* Selection Rectangle */
+  --selection-bg: rgba(0, 120, 215, 0.2);
+  --selection-border: #0078d7;
+
+  /* Playhead */
+  --playhead-bg: var(--accent-color);
 
   /* Marker colors */
   --marker-color: #ced4da;
@@ -162,9 +170,17 @@
     --shadow-heavy: 0 3px 8px rgba(0, 0, 0, 0.6);
 
     /* Keyframe colors */
-    --keyframe-color: #60a5fa;
-    --keyframe-border: #3b82f6;
-    --keyframe-hover: #93c5fd;
+    --keyframe-color: #666;
+    --keyframe-color-hover: #888;
+    --keyframe-color-selected: var(--accent-color-light);
+    --keyframe-border: #444;
+
+    /* Selection Rectangle */
+    --selection-bg: rgba(0, 120, 215, 0.3);
+    --selection-border: #0078d7;
+
+    /* Playhead */
+    --playhead-bg: var(--accent-color);
 
     /* Marker colors */
     --marker-color: #555;

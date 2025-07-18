@@ -1,8 +1,8 @@
-import { ref, computed, onMounted, watch, type Ref } from 'vue';
+import { ref, computed, onMounted, watch, type Ref, reactive } from 'vue';
 import { useAnimationState } from './useAnimationState';
 import { useDragHandler } from './useDragHandler';
 import { useCleanup } from './useCleanup';
-import type { LayerState } from '../types/animation';
+import type { LayerState, SelectedKeyframe } from '../types/animation';
 
 const FRAME_WIDTH = 20;
 const LAYER_HEIGHT = 32;
@@ -22,6 +22,16 @@ export function useTimeline(
   const animationName = ref('');
   const layerStates = ref<LayerState[]>([]);
   const isLooping = ref(false);
+  const selectedFrames = computed(() => animationState.selectedFrames);
+  const selectionRect = reactive({
+    visible: false,
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    startX: 0,
+    startY: 0,
+  });
 
   // UI state
   const timelineWidth = ref(800);
@@ -35,21 +45,65 @@ export function useTimeline(
       if (!timelineContainer.value) return;
 
       const rect = timelineContainer.value.getBoundingClientRect();
-      const clickX = event.clientX - rect.left + timelineContainer.value.scrollLeft;
-      const targetFrame = Math.round((clickX - FRAME_WIDTH / 2) / FRAME_WIDTH);
+      const startX = event.clientX - rect.left + timelineContainer.value.scrollLeft;
+      const startY = event.clientY - rect.top + timelineContainer.value.scrollTop;
 
-      if (targetFrame >= 0 && targetFrame < totalFrames.value) {
-        animationState?.renderer?.setCurrentFrame(targetFrame);
+      if (!event.shiftKey) {
+        animationState.setSelectedFrames(new Set());
       }
+
+      Object.assign(selectionRect, {
+        visible: true,
+        x: startX,
+        y: startY,
+        width: 0,
+        height: 0,
+        startX: startX,
+        startY: startY,
+      });
     },
     onDragMove: (event: MouseEvent) => {
       if (!timelineContainer.value || !animationState?.renderer) return;
 
       const rect = timelineContainer.value.getBoundingClientRect();
       const currentX = event.clientX - rect.left + timelineContainer.value.scrollLeft;
-      const newFrame = Math.round((currentX - FRAME_WIDTH / 2) / FRAME_WIDTH);
-      const clampedFrame = Math.max(0, Math.min(newFrame, totalFrames.value - 1));
-      animationState.renderer.setCurrentFrame(clampedFrame);
+      const currentY = event.clientY - rect.top + timelineContainer.value.scrollTop;
+
+      selectionRect.x = Math.min(selectionRect.startX, currentX);
+      selectionRect.y = Math.min(selectionRect.startY, currentY);
+      selectionRect.width = Math.abs(currentX - selectionRect.startX);
+      selectionRect.height = Math.abs(currentY - selectionRect.startY);
+    },
+    onDragEnd: () => {
+      if (!timelineContainer.value || !animationState.renderer) return;
+
+      const rectX1 = selectionRect.x;
+      const rectX2 = selectionRect.x + selectionRect.width;
+      const rectY1 = selectionRect.y;
+      const rectY2 = selectionRect.y + selectionRect.height;
+
+      const newSelectedKeyframes = new Set(animationState.selectedFrames);
+
+      layerStates.value.forEach((layer, layerIndex) => {
+        const layerTop = layerIndex * LAYER_HEIGHT + 30; // 30 is ruler height
+        const layerBottom = layerTop + LAYER_HEIGHT;
+
+        if (layerBottom > rectY1 && layerTop < rectY2) {
+          const keyframesWithInfo = getLayerKeyframes(layer);
+          keyframesWithInfo.forEach((kf) => {
+            if (kf.x >= rectX1 && kf.x <= rectX2) {
+              const key = `${layer.layerId}:${kf.frame}`;
+              if (!newSelectedKeyframes.has(key)) {
+                newSelectedKeyframes.add(key);
+              }
+            }
+          });
+        }
+      });
+
+      animationState.setSelectedFrames(newSelectedKeyframes);
+
+      Object.assign(selectionRect, { visible: false, width: 0, height: 0, startX: 0, startY: 0 });
     },
   });
 
@@ -63,8 +117,40 @@ export function useTimeline(
       const newFrame = Math.round((currentX - FRAME_WIDTH / 2) / FRAME_WIDTH);
       const clampedFrame = Math.max(0, Math.min(newFrame, totalFrames.value - 1));
       animationState.renderer.setCurrentFrame(clampedFrame);
+
+      // Also move selected keyframes
+      if (animationState.selectedFrames.size > 0 && timelineContainer.value) {
+        const frameDelta = clampedFrame - currentFrame.value;
+        if (frameDelta !== 0) {
+          // moveSelectedKeyframes(frameDelta);
+        }
+      }
     },
   });
+
+  const moveSelectedKeyframes = (frameDelta: number) => {
+    if (!animationState.renderer) return;
+
+    const movedKeyframes = new Map<string, SelectedKeyframe>();
+    const newKeys = new Set<string>();
+
+    animationState.selectedFrames.forEach((key: string) => {
+      const [layerIdStr, frameStr] = key.split(':');
+      const layerId = parseInt(layerIdStr, 10);
+      const frame = parseInt(frameStr, 10);
+      const newFrame = frame + frameDelta;
+
+      if (newFrame >= 0) {
+        movedKeyframes.set(key, { layerId, frame: newFrame });
+        newKeys.add(`${layerId}:${newFrame}`);
+      }
+    });
+
+    if (movedKeyframes.size > 0) {
+      animationState.renderer.moveKeyframes(movedKeyframes);
+      animationState.setSelectedFrames(newKeys);
+    }
+  };
 
   const updateTimelineData = () => {
     if (!animationState?.renderer) return;
@@ -102,15 +188,24 @@ export function useTimeline(
     }));
   });
 
-  const getLayerKeyframes = (layerState: any) => {
+  const getLayerKeyframes = (layerState: LayerState) => {
     if (!animationState?.renderer) return [];
     const keyframes = animationState.renderer.getLayerKeyframes(layerState.layerId);
-    return keyframes.map((kf) => ({
-      frame: kf.animationFrame,
-      x: kf.animationFrame * FRAME_WIDTH + FRAME_WIDTH / 2,
-      delay: kf.delay,
-      frameData: kf.frameData,
-    }));
+
+    const result: { frame: number; x: number; delay: number; frameData: any }[] = [];
+    let currentAnimFrame = 0;
+
+    for (const kf of keyframes) {
+      result.push({
+        frame: currentAnimFrame,
+        x: currentAnimFrame * FRAME_WIDTH + FRAME_WIDTH / 2,
+        delay: kf.delay,
+        frameData: kf,
+      });
+      currentAnimFrame += kf.delay;
+    }
+
+    return result;
   };
 
   const onTimelineMouseDown = (event: MouseEvent) => {
@@ -150,6 +245,28 @@ export function useTimeline(
     }
   };
 
+  const selectKeyframe = (layerId: number, frame: number, event: MouseEvent) => {
+    const key = `${layerId}:${frame}`;
+    const newSelected = new Set(animationState.selectedFrames);
+
+    if (event.shiftKey) {
+      if (newSelected.has(key)) {
+        newSelected.delete(key);
+      } else {
+        newSelected.add(key);
+      }
+    } else {
+      newSelected.clear();
+      newSelected.add(key);
+    }
+
+    animationState.setSelectedFrames(newSelected);
+    selectLayer(layerId);
+    if (animationState.renderer) {
+      animationState.renderer.setCurrentFrame(frame);
+    }
+  };
+
   onMounted(() => {
     updateTimelineData();
     refreshInterval = setInterval(updateTimelineData, 1000 / 30);
@@ -185,8 +302,11 @@ export function useTimeline(
     togglePlayback,
     stopPlayback,
     selectLayer,
+    selectKeyframe,
     layerHeight: LAYER_HEIGHT,
     frameWidth: FRAME_WIDTH,
     isLooping,
+    selectedKeyframes: selectedFrames,
+    selectionRect,
   };
 }

@@ -30,9 +30,12 @@ const {
   togglePlayback,
   stopPlayback,
   selectLayer,
+  selectKeyframe,
   layerHeight,
   frameWidth,
   isLooping,
+  selectedKeyframes,
+  selectionRect,
 } = useTimeline(timelineContainer, layersContainer);
 
 watch(playheadPosition, (newPos) => {
@@ -113,7 +116,11 @@ watch(playheadPosition, (newPos) => {
                   v-for="keyframe in getLayerKeyframes(layer)"
                   :key="`${layer.layerId}-${keyframe.frame}`"
                   class="keyframe"
+                  :class="{
+                    selected: selectedKeyframes.has(`${layer.layerId}:${keyframe.frame}`),
+                  }"
                   :style="{ left: `${keyframe.x}px` }"
+                  @mousedown.stop="selectKeyframe(layer.layerId, keyframe.frame, $event)"
                 >
                   <div class="keyframe-dot"></div>
                 </div>
@@ -137,13 +144,21 @@ watch(playheadPosition, (newPos) => {
             </div>
           </div>
 
+          <!-- Selection Rectangle -->
+          <div
+            v-if="selectionRect.visible"
+            class="selection-rectangle"
+            :style="{
+              left: `${selectionRect.x}px`,
+              top: `${selectionRect.y}px`,
+              width: `${selectionRect.width}px`,
+              height: `${selectionRect.height}px`,
+            }"
+          ></div>
+
           <!-- Click Event Catcher -->
           <div
             class="timeline-click-area"
-            :style="{
-              height: `${layerStates.length * layerHeight + 30}px`,
-              width: `${totalFrames * frameWidth + frameWidth}px`,
-            }"
             @mousedown="onTimelineMouseDown"
           ></div>
         </div>
@@ -242,6 +257,8 @@ watch(playheadPosition, (newPos) => {
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 50;
 }
 
 .keyframe-dot {
@@ -250,15 +267,27 @@ watch(playheadPosition, (newPos) => {
   background-color: var(--keyframe-color);
   border-radius: 50%;
   border: 1px solid var(--keyframe-border);
-  cursor: pointer;
   transition: all 0.15s ease;
   box-shadow: var(--shadow-normal);
 }
 
-.keyframe-dot:hover {
-  background-color: var(--keyframe-hover);
-  transform: scale(1.1);
-  box-shadow: var(--shadow-medium);
+.keyframe:hover .keyframe-dot {
+  transform: scale(1.5);
+  background-color: var(--keyframe-color-hover);
+}
+
+.keyframe.selected .keyframe-dot {
+  background-color: var(--keyframe-color-selected);
+  transform: scale(1.5);
+  box-shadow: 0 0 4px var(--keyframe-color-selected);
+}
+
+.selection-rectangle {
+  position: absolute;
+  background-color: var(--selection-bg);
+  border: 1px solid var(--selection-border);
+  z-index: 20;
+  pointer-events: none;
 }
 
 .playhead {
@@ -305,10 +334,10 @@ watch(playheadPosition, (newPos) => {
 
 .timeline-click-area {
   position: absolute;
-  top: 0;
+  top: 30px;
   left: 0;
-  cursor: pointer;
-  z-index: 50;
+  right: 0;
+  bottom: 0;
 }
 
 /* Scrollbar styling */
