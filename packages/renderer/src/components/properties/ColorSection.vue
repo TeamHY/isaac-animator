@@ -15,8 +15,7 @@
             :min="0"
             :max="255"
             type="red"
-            disabled
-            readonly
+            @update:value="props.updateTintR"
           />
           <ColorSlider
             label="G"
@@ -24,8 +23,7 @@
             :min="0"
             :max="255"
             type="green"
-            disabled
-            readonly
+            @update:value="props.updateTintG"
           />
           <ColorSlider
             label="B"
@@ -33,8 +31,7 @@
             :min="0"
             :max="255"
             type="blue"
-            disabled
-            readonly
+            @update:value="props.updateTintB"
           />
           <ColorSlider
             label="A"
@@ -42,8 +39,7 @@
             :min="0"
             :max="255"
             type="alpha"
-            disabled
-            readonly
+            @update:value="props.updateTintAlpha"
           />
         </div>
       </div>
@@ -62,8 +58,7 @@
             :min="0"
             :max="255"
             type="red"
-            disabled
-            readonly
+            @update:value="props.updateOffsetR"
           />
           <ColorSlider
             label="G"
@@ -71,8 +66,7 @@
             :min="0"
             :max="255"
             type="green"
-            disabled
-            readonly
+            @update:value="props.updateOffsetG"
           />
           <ColorSlider
             label="B"
@@ -80,8 +74,7 @@
             :min="0"
             :max="255"
             type="blue"
-            disabled
-            readonly
+            @update:value="props.updateOffsetB"
           />
         </div>
       </div>
@@ -103,6 +96,13 @@ interface ColorSectionProps {
   offsetR: number;
   offsetG: number;
   offsetB: number;
+  updateTintR: (value: number) => void;
+  updateTintG: (value: number) => void;
+  updateTintB: (value: number) => void;
+  updateTintAlpha: (value: number) => void;
+  updateOffsetR: (value: number) => void;
+  updateOffsetG: (value: number) => void;
+  updateOffsetB: (value: number) => void;
 }
 
 const props = defineProps<ColorSectionProps>();
@@ -145,4 +145,4 @@ const offsetColorPreview = computed(() => {
   flex-direction: column;
   gap: 8px;
 }
-</style> 
+</style>

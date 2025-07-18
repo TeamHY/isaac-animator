@@ -131,6 +131,13 @@ const {
           :offset-r="offsetR"
           :offset-g="offsetG"
           :offset-b="offsetB"
+          :update-tint-r="updateTintR"
+          :update-tint-g="updateTintG"
+          :update-tint-b="updateTintB"
+          :update-tint-alpha="updateTintAlpha"
+          :update-offset-r="updateOffsetR"
+          :update-offset-g="updateOffsetG"
+          :update-offset-b="updateOffsetB"
         />
       </template>
     </div>
