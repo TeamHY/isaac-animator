@@ -23,6 +23,7 @@ const {
   layerStates,
   playheadPosition,
   isDraggingPlayhead,
+  isDraggingKeyframes,
   timelineFrames,
   getLayerKeyframes,
   onTimelineMouseDown,
@@ -31,6 +32,7 @@ const {
   stopPlayback,
   selectLayer,
   selectKeyframe,
+  startKeyframeDrag,
   layerHeight,
   frameWidth,
   isLooping,
@@ -120,9 +122,11 @@ watch(playheadPosition, (newPos) => {
                   :class="{
                     selected: selectedKeyframes.has(`${layer.layerId}:${keyframe.frame}`),
                     hovered: hoveredKeyframes.has(`${layer.layerId}:${keyframe.frame}`),
+                    'invisible-frame': !keyframe.frameData.visible,
+                    'dragging': keyframe.isDragging,
                   }"
                   :style="{ left: `${keyframe.x}px` }"
-                  @mousedown.stop="selectKeyframe(layer.layerId, keyframe.frame, $event)"
+                  @mousedown.stop="startKeyframeDrag(layer.layerId, keyframe.frame, $event)"
                 >
                   <div class="keyframe-dot"></div>
                 </div>
@@ -283,6 +287,36 @@ watch(playheadPosition, (newPos) => {
   background-color: var(--keyframe-color-selected);
   transform: scale(1.2) rotate(45deg);
   box-shadow: 0 0 4px var(--keyframe-color-selected);
+}
+
+.keyframe.invisible-frame .keyframe-dot {
+  background-color: transparent;
+  border: 2px solid var(--keyframe-color);
+}
+
+.keyframe.invisible-frame:hover .keyframe-dot,
+.keyframe.invisible-frame.hovered .keyframe-dot {
+  background-color: transparent;
+  border: 2px solid var(--keyframe-color-hover);
+  transform: scale(1.5) rotate(45deg);
+}
+
+.keyframe.invisible-frame.selected .keyframe-dot {
+  background-color: transparent;
+  border: 2px solid var(--keyframe-color-selected);
+  transform: scale(1.2) rotate(45deg);
+  box-shadow: 0 0 4px var(--keyframe-color-selected);
+}
+
+.keyframe.dragging .keyframe-dot {
+  opacity: 0.7;
+  box-shadow: 0 0 8px var(--keyframe-color-selected);
+}
+
+.keyframe.dragging.invisible-frame .keyframe-dot {
+  opacity: 0.7;
+  border: 2px solid var(--keyframe-color-selected);
+  box-shadow: 0 0 8px var(--keyframe-color-selected);
 }
 
 .selection-rectangle {
