@@ -8,6 +8,7 @@ import ColorSection from "./properties/ColorSection.vue";
 const {
   selectedLayerName,
   isNullLayerSelected,
+  hasSelectedFrame,
   cropX,
   cropY,
   width,
@@ -70,57 +71,68 @@ const {
 
     <!-- Content Section -->
     <div class="panel-content">
-      <!-- Transform Section -->
-      <TransformSection
-        :position-x="positionX"
-        :position-y="positionY"
-        :scale-x="scaleX"
-        :scale-y="scaleY"
-        :rotation="rotation"
-        :update-position-x="updatePositionX"
-        :update-position-y="updatePositionY"
-        :update-scale-x="updateScaleX"
-        :update-scale-y="updateScaleY"
-        :update-rotation="updateRotation"
-      />
+      <!-- No Frame Selected State -->
+      <div v-if="!hasSelectedFrame" class="empty-state">
+        <div class="empty-content">
+          <h3>No Frame Selected</h3>
+          <p>Select a frame to edit its properties</p>
+        </div>
+      </div>
 
-      <!-- Appearance Section (for non-null layers) -->
-      <AppearanceSection
-        v-if="!isNullLayerSelected"
-        :crop-x="cropX"
-        :crop-y="cropY"
-        :width="width"
-        :height="height"
-        :pivot-x="pivotX"
-        :pivot-y="pivotY"
-        :update-crop-x="updateCropX"
-        :update-crop-y="updateCropY"
-        :update-width="updateWidth"
-        :update-height="updateHeight"
-        :update-pivot-x="updatePivotX"
-        :update-pivot-y="updatePivotY"
-      />
+      <!-- Properties Content (when frame is selected) -->
+      <template v-else>
+        <!-- Transform Section -->
+        <TransformSection
+          :position-x="positionX"
+          :position-y="positionY"
+          :scale-x="scaleX"
+          :scale-y="scaleY"
+          :rotation="rotation"
+          :update-position-x="updatePositionX"
+          :update-position-y="updatePositionY"
+          :update-scale-x="updateScaleX"
+          :update-scale-y="updateScaleY"
+          :update-rotation="updateRotation"
+        />
 
-      <!-- Animation Section -->
-      <AnimationSection
-        :visible="visible"
-        :interpolated="interpolated"
-        :duration="duration"
-        @update:visible="updateVisible"
-        @update:interpolated="updateInterpolated"
-        @update:duration="updateDuration"
-      />
+        <!-- Appearance Section (for non-null layers) -->
+        <AppearanceSection
+          v-if="!isNullLayerSelected"
+          :crop-x="cropX"
+          :crop-y="cropY"
+          :width="width"
+          :height="height"
+          :pivot-x="pivotX"
+          :pivot-y="pivotY"
+          :update-crop-x="updateCropX"
+          :update-crop-y="updateCropY"
+          :update-width="updateWidth"
+          :update-height="updateHeight"
+          :update-pivot-x="updatePivotX"
+          :update-pivot-y="updatePivotY"
+        />
 
-      <!-- Color Section -->
-      <ColorSection
-        :tint-r="tintR"
-        :tint-g="tintG"
-        :tint-b="tintB"
-        :tint-alpha="tintAlpha"
-        :offset-r="offsetR"
-        :offset-g="offsetG"
-        :offset-b="offsetB"
-      />
+        <!-- Animation Section -->
+        <AnimationSection
+          :visible="visible"
+          :interpolated="interpolated"
+          :duration="duration"
+          @update:visible="updateVisible"
+          @update:interpolated="updateInterpolated"
+          @update:duration="updateDuration"
+        />
+
+        <!-- Color Section -->
+        <ColorSection
+          :tint-r="tintR"
+          :tint-g="tintG"
+          :tint-b="tintB"
+          :tint-alpha="tintAlpha"
+          :offset-r="offsetR"
+          :offset-g="offsetG"
+          :offset-b="offsetB"
+        />
+      </template>
     </div>
   </div>
 </template>
@@ -186,6 +198,33 @@ const {
   gap: 8px;
   overflow-y: auto;
   min-height: 0;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-color: var(--bg-color);
+  color: var(--text-color-muted);
+}
+
+.empty-content {
+  text-align: center;
+}
+
+.empty-content h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--text-color);
+}
+
+.empty-content p {
+  font-size: 14px;
+  margin: 0;
+  color: var(--text-color-muted);
 }
 
 /* Dark mode is handled by CSS variables */

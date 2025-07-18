@@ -80,7 +80,7 @@ const zoomOut = () => setZoom(zoomLevel.value / 1.2);
         <!-- Empty State Overlay -->
         <div v-if="selectedSpritesheet === null" class="empty-state-overlay">
           <div class="empty-state-content">
-            <h3>Spritesheet Viewer</h3>
+            <h3>No Spritesheet Selected</h3>
             <p>Select a spritesheet to view</p>
           </div>
         </div>

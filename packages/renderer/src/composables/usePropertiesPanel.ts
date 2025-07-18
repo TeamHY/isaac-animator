@@ -29,6 +29,11 @@ export function usePropertiesPanel() {
     return animationState.getSelectedLayerName() || 'Select a layer';
   });
 
+  const hasSelectedFrame = computed(() => {
+    if (!animationState) return false;
+    return animationState.selectedLayerId !== null;
+  });
+
   // Helper function to create frame data computed properties concisely
   const createFrameDataComputed = <T>(
     getter: (frame: Anm2Frame) => T | undefined,
@@ -184,6 +189,7 @@ export function usePropertiesPanel() {
     animationState,
     selectedLayerName,
     isNullLayerSelected,
+    hasSelectedFrame,
     cropX,
     cropY,
     width,
