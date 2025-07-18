@@ -291,19 +291,19 @@ watch(playheadPosition, (newPos) => {
 
 .keyframe.invisible-frame .keyframe-dot {
   background-color: transparent;
-  border: 2px solid var(--keyframe-color);
+  border: 2px dotted var(--keyframe-color);
 }
 
 .keyframe.invisible-frame:hover .keyframe-dot,
 .keyframe.invisible-frame.hovered .keyframe-dot {
   background-color: transparent;
-  border: 2px solid var(--keyframe-color-hover);
+  border: 2px dotted var(--keyframe-color-hover);
   transform: scale(1.5) rotate(45deg);
 }
 
 .keyframe.invisible-frame.selected .keyframe-dot {
   background-color: transparent;
-  border: 2px solid var(--keyframe-color-selected);
+  border: 2px dotted var(--keyframe-color-selected);
   transform: scale(1.2) rotate(45deg);
   box-shadow: 0 0 4px var(--keyframe-color-selected);
 }
@@ -315,7 +315,7 @@ watch(playheadPosition, (newPos) => {
 
 .keyframe.dragging.invisible-frame .keyframe-dot {
   opacity: 0.7;
-  border: 2px solid var(--keyframe-color-selected);
+  border: 2px dotted var(--keyframe-color-selected);
   box-shadow: 0 0 8px var(--keyframe-color-selected);
 }
 
@@ -397,5 +397,4 @@ watch(playheadPosition, (newPos) => {
   background: var(--scrollbar-thumb-hover);
 }
 
-/* Dark mode is handled by CSS variables */
 </style>

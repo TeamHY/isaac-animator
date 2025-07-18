@@ -73,7 +73,7 @@ export class Anm2Renderer {
       .lineTo(crosshairSize, 0)
       .moveTo(0, -crosshairSize)
       .lineTo(0, crosshairSize)
-      .stroke({ width: lineWidth, color: 0xFF0000 });
+      .stroke({ width: lineWidth, color: 0xff0000 });
   }
 
   play(animationName?: string): void {
@@ -96,7 +96,7 @@ export class Anm2Renderer {
   }
 
   setAnimation(animationName: string): void {
-    const animation = this.anm2Data.animations.find(anim => anim.name === animationName);
+    const animation = this.anm2Data.animations.find((anim) => anim.name === animationName);
     if (!animation) {
       console.warn(`Animation not found: ${animationName}`);
       return;
@@ -128,7 +128,7 @@ export class Anm2Renderer {
   }
 
   getCurrentAnimation(): Anm2Animation | undefined {
-    return this.anm2Data.animations.find(anim => anim.name === this.currentAnimation);
+    return this.anm2Data.animations.find((anim) => anim.name === this.currentAnimation);
   }
 
   getSpritesheet(spritesheetId: number): SpritesheetData | undefined {
@@ -136,7 +136,7 @@ export class Anm2Renderer {
   }
 
   getSpritesheetWithPath(path: string): SpritesheetData | undefined {
-    return Array.from(this.spritesheets.values()).find(data => data.path === path);
+    return Array.from(this.spritesheets.values()).find((data) => data.path === path);
   }
 
   update(): void {
@@ -225,11 +225,13 @@ export class Anm2Renderer {
       greenOffset: this.lerpColor(currentFrame.greenOffset, nextFrame.greenOffset, t),
       blueOffset: this.lerpColor(currentFrame.blueOffset, nextFrame.blueOffset, t),
       rotation: this.lerp(currentFrame.rotation, nextFrame.rotation, t),
-      interpolated: currentFrame.interpolated
+      interpolated: currentFrame.interpolated,
     };
   }
 
-  private findCurrentAndNextFrame(frames: Anm2Frame[]): { currentFrame: Anm2Frame; nextFrame: Anm2Frame | null; frameProgress: number; frameIndex: number } | null {
+  private findCurrentAndNextFrame(
+    frames: Anm2Frame[]
+  ): { currentFrame: Anm2Frame; nextFrame: Anm2Frame | null; frameProgress: number; frameIndex: number } | null {
     if (frames.length === 0) return null;
 
     if (frames.length === 1) {
@@ -237,12 +239,11 @@ export class Anm2Renderer {
         currentFrame: frames[0],
         nextFrame: null,
         frameProgress: 0,
-        frameIndex: 0
+        frameIndex: 0,
       };
     }
 
     let totalDelay = 0;
-    let frameIndex = 0;
 
     for (let i = 0; i < frames.length; i++) {
       const frame = frames[i];
@@ -256,20 +257,18 @@ export class Anm2Renderer {
           currentFrame: frame,
           nextFrame,
           frameProgress: Math.max(0, Math.min(1, frameProgress)),
-          frameIndex: i
+          frameIndex: i,
         };
       }
 
       totalDelay = frameEnd;
-      frameIndex = i;
     }
 
-    // 마지막 프레임 반환
     return {
       currentFrame: frames[frames.length - 1],
       nextFrame: null,
       frameProgress: 1,
-      frameIndex: frames.length - 1
+      frameIndex: frames.length - 1,
     };
   }
 
@@ -291,7 +290,6 @@ export class Anm2Renderer {
 
     const { currentFrame, nextFrame, frameProgress } = frameInfo;
 
-    // interpolated가 true이고 다음 프레임이 있으면 보간 적용
     let targetFrame: Anm2Frame;
     if (currentFrame.interpolated && nextFrame && frameProgress > 0) {
       targetFrame = this.interpolateFrame(currentFrame, nextFrame, frameProgress);
@@ -320,7 +318,6 @@ export class Anm2Renderer {
 
     const { currentFrame, nextFrame, frameProgress } = frameInfo;
 
-    // interpolated가 true이고 다음 프레임이 있으면 보간 적용
     let targetFrame: Anm2Frame;
     if (currentFrame.interpolated && nextFrame && frameProgress > 0) {
       targetFrame = this.interpolateFrame(currentFrame, nextFrame, frameProgress);
@@ -356,12 +353,16 @@ export class Anm2Renderer {
 
     // Set texture with cropping
     const spritesheetTexture = this.spritesheets.get(layer.spritesheetId)?.texture;
-    if (spritesheetTexture && frame.xCrop !== undefined && frame.yCrop !== undefined &&
-        frame.width !== undefined && frame.height !== undefined) {
-
+    if (
+      spritesheetTexture &&
+      frame.xCrop !== undefined &&
+      frame.yCrop !== undefined &&
+      frame.width !== undefined &&
+      frame.height !== undefined
+    ) {
       const croppedTexture = new Texture({
         source: spritesheetTexture.source,
-        frame: new Rectangle(frame.xCrop, frame.yCrop, frame.width, frame.height)
+        frame: new Rectangle(frame.xCrop, frame.yCrop, frame.width, frame.height),
       });
 
       sprite.texture = croppedTexture;
@@ -370,14 +371,18 @@ export class Anm2Renderer {
     sprite.x = frame.xPosition;
     sprite.y = frame.yPosition;
 
-    if (frame.xPivot !== undefined && frame.yPivot !== undefined &&
-        frame.width !== undefined && frame.height !== undefined) {
+    if (
+      frame.xPivot !== undefined &&
+      frame.yPivot !== undefined &&
+      frame.width !== undefined &&
+      frame.height !== undefined
+    ) {
       sprite.anchor.set(frame.xPivot / frame.width, frame.yPivot / frame.height);
     }
 
     sprite.scale = {
       x: frame.xScale / 100,
-      y: frame.yScale / 100
+      y: frame.yScale / 100,
     };
 
     sprite.rotation = (frame.rotation * Math.PI) / 180;
@@ -390,7 +395,7 @@ export class Anm2Renderer {
   }
 
   getAnimationNames(): string[] {
-    return this.anm2Data.animations.map(anim => anim.name);
+    return this.anm2Data.animations.map((anim) => anim.name);
   }
 
   getCurrentFrame(): number {
@@ -428,11 +433,11 @@ export class Anm2Renderer {
   }
 
   private getLayerById(layerId: number) {
-    return this.anm2Data.content.layers.find(l => l.id === layerId);
+    return this.anm2Data.content.layers.find((l) => l.id === layerId);
   }
 
   private getNullById(nullId: number) {
-    return this.anm2Data.content.nulls.find(n => n.id === nullId);
+    return this.anm2Data.content.nulls.find((n) => n.id === nullId);
   }
 
   getCurrentLayerStates(): LayerState[] {
@@ -441,7 +446,6 @@ export class Anm2Renderer {
 
     const layerStates: LayerState[] = animation.layerAnimations.map((layerAnim): LayerState => {
       const layer = this.getLayerById(layerAnim.layerId);
-      const spritesheet = this.anm2Data.content.spritesheets.find(s => s.id === layer?.spritesheetId);
 
       // Find frame data for current animation time
       let currentFrameData = null;
@@ -465,11 +469,8 @@ export class Anm2Renderer {
         layerId: layerAnim.layerId,
         layerName: layer?.name || `Layer ${layerAnim.layerId}`,
         visible: layerAnim.visible,
-        spritesheetPath: spritesheet?.path || 'N/A',
-        frameCount: layerAnim.frames.length,
         currentFrame: currentFrameData,
-        isCurrentlyVisible: layerAnim.visible && (currentFrameData?.visible ?? false),
-        isNullLayer: false
+        isNullLayer: false,
       };
     });
 
@@ -499,12 +500,9 @@ export class Anm2Renderer {
         layerId: -(nullAnim.nullId + 1), // Convert null ID to negative (0 → -1, 1 → -2, ...)
         layerName: nullItem?.name || `Null ${nullAnim.nullId}`,
         visible: nullAnim.visible,
-        spritesheetPath: 'N/A',
-        frameCount: nullAnim.frames.length,
         currentFrame: currentFrameData,
-        isCurrentlyVisible: nullAnim.visible && (currentFrameData?.visible ?? false),
         isNullLayer: true,
-        originalNullId: nullAnim.nullId
+        originalNullId: nullAnim.nullId,
       };
     });
 
@@ -517,7 +515,7 @@ export class Anm2Renderer {
 
     // Positive for regular layers, negative for null layers
     if (layerId >= 0) {
-      const layerAnim = animation.layerAnimations.find(la => la.layerId === layerId);
+      const layerAnim = animation.layerAnimations.find((la) => la.layerId === layerId);
       if (layerAnim) {
         const keyframes = [];
         let currentAnimFrame = 0;
@@ -526,7 +524,7 @@ export class Anm2Renderer {
           keyframes.push({
             animationFrame: currentAnimFrame,
             frameData: frame,
-            delay: frame.delay
+            delay: frame.delay,
           });
           currentAnimFrame += frame.delay;
         }
@@ -536,7 +534,7 @@ export class Anm2Renderer {
     } else {
       // Convert negative ID back to original null ID
       const originalNullId = -(layerId + 1); // -1 → 0, -2 → 1, ...
-      const nullAnim = animation.nullAnimations.find(na => na.nullId === originalNullId);
+      const nullAnim = animation.nullAnimations.find((na) => na.nullId === originalNullId);
       if (nullAnim) {
         const keyframes = [];
         let currentAnimFrame = 0;
@@ -545,7 +543,7 @@ export class Anm2Renderer {
           keyframes.push({
             animationFrame: currentAnimFrame,
             frameData: frame,
-            delay: frame.delay
+            delay: frame.delay,
           });
           currentAnimFrame += frame.delay;
         }
@@ -571,7 +569,7 @@ export class Anm2Renderer {
 
     // Handle both regular layers (positive ID) and null layers (negative ID)
     if (layerId >= 0) {
-      const layerAnim = animation.layerAnimations.find(la => la.layerId === layerId);
+      const layerAnim = animation.layerAnimations.find((la) => la.layerId === layerId);
       if (!layerAnim || layerAnim.frames.length === 0) return false;
 
       // Find current frame based on animation time
@@ -595,7 +593,7 @@ export class Anm2Renderer {
     } else {
       // Handle null layers (convert negative ID back to original null ID)
       const originalNullId = -(layerId + 1);
-      const nullAnim = animation.nullAnimations.find(na => na.nullId === originalNullId);
+      const nullAnim = animation.nullAnimations.find((na) => na.nullId === originalNullId);
       if (!nullAnim || nullAnim.frames.length === 0) return false;
 
       // Find current frame based on animation time
@@ -629,7 +627,7 @@ export class Anm2Renderer {
 
     // Handle both regular layers (positive ID) and null layers (negative ID)
     if (layerId >= 0) {
-      const layerAnim = animation.layerAnimations.find(la => la.layerId === layerId);
+      const layerAnim = animation.layerAnimations.find((la) => la.layerId === layerId);
       if (!layerAnim || layerAnim.frames.length === 0) return null;
 
       // Find current frame based on animation time
@@ -648,7 +646,7 @@ export class Anm2Renderer {
     } else {
       // Handle null layers (convert negative ID back to original null ID)
       const originalNullId = -(layerId + 1);
-      const nullAnim = animation.nullAnimations.find(na => na.nullId === originalNullId);
+      const nullAnim = animation.nullAnimations.find((na) => na.nullId === originalNullId);
       if (!nullAnim || nullAnim.frames.length === 0) return null;
 
       // Find current frame based on animation time
@@ -682,7 +680,7 @@ export class Anm2Renderer {
     this.initializeNulls();
 
     // Refresh the current animation
-    if (this.anm2Data.animations.find(anim => anim.name === this.currentAnimation)) {
+    if (this.anm2Data.animations.find((anim) => anim.name === this.currentAnimation)) {
       this.updateFrame();
     } else {
       // If current animation no longer exists, switch to default
@@ -727,7 +725,7 @@ export class Anm2Renderer {
     }
   }
 
-    private moveLayerKeyframes(layerId: number, moves: Array<{ oldFrame: number; newFrame: number }>): void {
+  private moveLayerKeyframes(layerId: number, moves: Array<{ oldFrame: number; newFrame: number }>): void {
     const animation = this.getCurrentAnimation();
     if (!animation) return;
 
@@ -737,11 +735,11 @@ export class Anm2Renderer {
 
     if (isNullLayer) {
       const originalNullId = -(layerId + 1);
-      const nullAnim = animation.nullAnimations.find(na => na.nullId === originalNullId);
+      const nullAnim = animation.nullAnimations.find((na) => na.nullId === originalNullId);
       if (!nullAnim) return;
       frames = nullAnim.frames;
     } else {
-      const layerAnim = animation.layerAnimations.find(la => la.layerId === layerId);
+      const layerAnim = animation.layerAnimations.find((la) => la.layerId === layerId);
       if (!layerAnim) return;
       frames = layerAnim.frames;
     }
@@ -755,14 +753,14 @@ export class Anm2Renderer {
         frame: { ...frames[i] },
         timelinePos: currentTime,
         index: i,
-        isMoving: false
+        isMoving: false,
       });
       currentTime += frames[i].delay;
     }
 
     // Mark moving keyframes and apply moves
     for (const { oldFrame, newFrame } of moves) {
-      const keyframe = keyframeData.find(kf => kf.timelinePos === oldFrame);
+      const keyframe = keyframeData.find((kf) => kf.timelinePos === oldFrame);
       if (keyframe) {
         keyframe.timelinePos = newFrame;
         keyframe.isMoving = true;
@@ -805,13 +803,13 @@ export class Anm2Renderer {
       const invisibleKeyframe: Anm2Frame = {
         ...firstKeyframe,
         visible: false,
-        delay: finalKeyframes[0].timelinePos
+        delay: finalKeyframes[0].timelinePos,
       };
 
       finalKeyframes.unshift({
         frame: invisibleKeyframe,
         timelinePos: 0,
-        isMoving: false
+        isMoving: false,
       });
     }
 
@@ -825,19 +823,19 @@ export class Anm2Renderer {
 
       newFrames.push({
         ...current.frame,
-        delay: Math.max(1, newDelay) // Ensure minimum delay of 1
+        delay: Math.max(1, newDelay), // Ensure minimum delay of 1
       });
     }
 
     // Update the frames array
     if (isNullLayer) {
       const originalNullId = -(layerId + 1);
-      const nullAnim = animation.nullAnimations.find(na => na.nullId === originalNullId);
+      const nullAnim = animation.nullAnimations.find((na) => na.nullId === originalNullId);
       if (nullAnim) {
         nullAnim.frames = newFrames;
       }
     } else {
-      const layerAnim = animation.layerAnimations.find(la => la.layerId === layerId);
+      const layerAnim = animation.layerAnimations.find((la) => la.layerId === layerId);
       if (layerAnim) {
         layerAnim.frames = newFrames;
       }

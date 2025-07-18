@@ -3,6 +3,7 @@ import { useAnimationState } from './useAnimationState';
 import { useDragHandler } from './useDragHandler';
 import { useCleanup } from './useCleanup';
 import type { LayerState, SelectedKeyframe } from '../types/animation';
+import { useAppState } from './useAppState';
 
 const FRAME_WIDTH = 20;
 const LAYER_HEIGHT = 32;
@@ -11,6 +12,7 @@ export function useTimeline(
   timelineContainer: Ref<HTMLDivElement | null>,
   layersContainer: Ref<HTMLDivElement | null>
 ) {
+  const { saveState } = useAppState();
   const { animationState, getLayerById } = useAnimationState();
   const { addCleanup } = useCleanup();
 
@@ -108,12 +110,18 @@ export function useTimeline(
 
       const newSelectedKeyframes = new Set(animationState.selectedFrames);
 
-      hoveredKeyframes.value.forEach(key => newSelectedKeyframes.add(key));
+      hoveredKeyframes.value.forEach((key) => newSelectedKeyframes.add(key));
 
       animationState.setSelectedFrames(newSelectedKeyframes);
 
       hoveredKeyframes.value.clear();
-      Object.assign(selectionRect, { visible: false, width: 0, height: 0, startX: 0, startY: 0 });
+      Object.assign(selectionRect, {
+        visible: false,
+        width: 0,
+        height: 0,
+        startX: 0,
+        startY: 0,
+      });
     },
   });
 
@@ -130,7 +138,7 @@ export function useTimeline(
     },
   });
 
-    // Keyframe drag state
+  // Keyframe drag state
   const keyframeDragState = ref<{
     isDragging: boolean;
     initialFrame: number;
@@ -161,7 +169,7 @@ export function useTimeline(
       keyframeDragState.value.isDragging = true;
       keyframeDragState.value.currentDelta = 0;
     },
-        onDragMove: (event: MouseEvent) => {
+    onDragMove: (event: MouseEvent) => {
       if (!timelineContainer.value || !animationState?.renderer || !keyframeDragState.value.isDragging) return;
 
       const rect = timelineContainer.value.getBoundingClientRect();
@@ -206,6 +214,7 @@ export function useTimeline(
         if (movedKeyframes.size > 0) {
           animationState.renderer?.moveKeyframes(movedKeyframes);
           animationState.setSelectedFrames(newKeys);
+          saveState();
         }
       }
 
@@ -214,30 +223,6 @@ export function useTimeline(
       keyframeDragState.value.originalKeyframes.clear();
     },
   });
-
-  const moveSelectedKeyframes = (frameDelta: number) => {
-    if (!animationState.renderer) return;
-
-    const movedKeyframes = new Map<string, { layerId: number; frame: number }>();
-    const newKeys = new Set<string>();
-
-    animationState.selectedFrames.forEach((key: string) => {
-      const [layerIdStr, frameStr] = key.split(':');
-      const layerId = parseInt(layerIdStr, 10);
-      const frame = parseInt(frameStr, 10);
-      const newFrame = frame + frameDelta;
-
-      if (newFrame >= 0) {
-        movedKeyframes.set(key, { layerId, frame: newFrame });
-        newKeys.add(`${layerId}:${newFrame}`);
-      }
-    });
-
-    if (movedKeyframes.size > 0) {
-      animationState.renderer.moveKeyframes(movedKeyframes);
-      animationState.setSelectedFrames(newKeys);
-    }
-  };
 
   const updateTimelineData = () => {
     if (!animationState?.renderer) return;
@@ -279,7 +264,13 @@ export function useTimeline(
     if (!animationState?.renderer) return [];
     const keyframes = animationState.renderer.getLayerKeyframes(layerState.layerId);
 
-    const result: { frame: number; x: number; delay: number; frameData: any; isDragging?: boolean }[] = [];
+    const result: {
+      frame: number;
+      x: number;
+      delay: number;
+      frameData: any;
+      isDragging?: boolean;
+    }[] = [];
     let currentAnimFrame = 0;
 
     for (const kf of keyframes) {
@@ -294,7 +285,7 @@ export function useTimeline(
 
     // If dragging keyframes, adjust positions for selected keyframes
     if (keyframeDragState.value.isDragging && keyframeDragState.value.currentDelta !== 0) {
-      return result.map(kf => {
+      return result.map((kf) => {
         const key = `${layerState.layerId}:${kf.frame}`;
         // Check if this keyframe is in the original selected frames
         const originalKey = keyframeDragState.value.originalKeyframes.has(key);
