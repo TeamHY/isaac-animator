@@ -23,6 +23,7 @@ export function useTimeline(
   const layerStates = ref<LayerState[]>([]);
   const isLooping = ref(false);
   const selectedFrames = computed(() => animationState.selectedFrames);
+  const hoveredKeyframes = ref(new Set<string>());
   const selectionRect = reactive({
     visible: false,
     x: 0,
@@ -73,6 +74,29 @@ export function useTimeline(
       selectionRect.y = Math.min(selectionRect.startY, currentY);
       selectionRect.width = Math.abs(currentX - selectionRect.startX);
       selectionRect.height = Math.abs(currentY - selectionRect.startY);
+
+      // Update hovered keyframes
+      const rectX1 = selectionRect.x;
+      const rectX2 = selectionRect.x + selectionRect.width;
+      const rectY1 = selectionRect.y;
+      const rectY2 = selectionRect.y + selectionRect.height;
+      const newHovered = new Set<string>();
+
+      layerStates.value.forEach((layer, layerIndex) => {
+        const layerTop = layerIndex * LAYER_HEIGHT + 30;
+        const layerBottom = layerTop + LAYER_HEIGHT;
+
+        if (layerBottom > rectY1 && layerTop < rectY2) {
+          const keyframesWithInfo = getLayerKeyframes(layer);
+          keyframesWithInfo.forEach((kf) => {
+            if (kf.x >= rectX1 && kf.x <= rectX2) {
+              const key = `${layer.layerId}:${kf.frame}`;
+              newHovered.add(key);
+            }
+          });
+        }
+      });
+      hoveredKeyframes.value = newHovered;
     },
     onDragEnd: () => {
       if (!timelineContainer.value || !animationState.renderer) return;
@@ -84,25 +108,11 @@ export function useTimeline(
 
       const newSelectedKeyframes = new Set(animationState.selectedFrames);
 
-      layerStates.value.forEach((layer, layerIndex) => {
-        const layerTop = layerIndex * LAYER_HEIGHT + 30; // 30 is ruler height
-        const layerBottom = layerTop + LAYER_HEIGHT;
-
-        if (layerBottom > rectY1 && layerTop < rectY2) {
-          const keyframesWithInfo = getLayerKeyframes(layer);
-          keyframesWithInfo.forEach((kf) => {
-            if (kf.x >= rectX1 && kf.x <= rectX2) {
-              const key = `${layer.layerId}:${kf.frame}`;
-              if (!newSelectedKeyframes.has(key)) {
-                newSelectedKeyframes.add(key);
-              }
-            }
-          });
-        }
-      });
+      hoveredKeyframes.value.forEach(key => newSelectedKeyframes.add(key));
 
       animationState.setSelectedFrames(newSelectedKeyframes);
 
+      hoveredKeyframes.value.clear();
       Object.assign(selectionRect, { visible: false, width: 0, height: 0, startX: 0, startY: 0 });
     },
   });
@@ -307,6 +317,7 @@ export function useTimeline(
     frameWidth: FRAME_WIDTH,
     isLooping,
     selectedKeyframes: selectedFrames,
+    hoveredKeyframes,
     selectionRect,
   };
 }

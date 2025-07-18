@@ -35,6 +35,7 @@ const {
   frameWidth,
   isLooping,
   selectedKeyframes,
+  hoveredKeyframes,
   selectionRect,
 } = useTimeline(timelineContainer, layersContainer);
 
@@ -118,6 +119,7 @@ watch(playheadPosition, (newPos) => {
                   class="keyframe"
                   :class="{
                     selected: selectedKeyframes.has(`${layer.layerId}:${keyframe.frame}`),
+                    hovered: hoveredKeyframes.has(`${layer.layerId}:${keyframe.frame}`),
                   }"
                   :style="{ left: `${keyframe.x}px` }"
                   @mousedown.stop="selectKeyframe(layer.layerId, keyframe.frame, $event)"
@@ -265,20 +267,21 @@ watch(playheadPosition, (newPos) => {
   width: 8px;
   height: 8px;
   background-color: var(--keyframe-color);
-  border-radius: 50%;
   border: 1px solid var(--keyframe-border);
   transition: all 0.15s ease;
   box-shadow: var(--shadow-normal);
+  transform: rotate(45deg);
 }
 
-.keyframe:hover .keyframe-dot {
-  transform: scale(1.5);
+.keyframe:hover .keyframe-dot,
+.keyframe.hovered .keyframe-dot {
+  transform: scale(1.5) rotate(45deg);
   background-color: var(--keyframe-color-hover);
 }
 
 .keyframe.selected .keyframe-dot {
   background-color: var(--keyframe-color-selected);
-  transform: scale(1.5);
+  transform: scale(1.2) rotate(45deg);
   box-shadow: 0 0 4px var(--keyframe-color-selected);
 }
 

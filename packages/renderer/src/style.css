@@ -70,10 +70,10 @@
   --shadow-heavy: 0 3px 8px rgba(0, 0, 0, 0.3);
 
   /* Keyframe colors */
-  --keyframe-color: #ffca28;
-  --keyframe-color-hover: #ffd54f;
-  --keyframe-color-selected: #ffb300;
-  --keyframe-border: #e6a700;
+  --keyframe-color: #a0cff4; /* Low saturation blue */
+  --keyframe-color-hover: #6ab7f7; /* Brighter blue */
+  --keyframe-color-selected: #0078d7; /* Accent blue */
+  --keyframe-border: #005a9e;
 
   /* Selection Rectangle */
   --selection-bg: rgba(0, 120, 215, 0.2);
@@ -170,14 +170,14 @@
     --shadow-heavy: 0 3px 8px rgba(0, 0, 0, 0.6);
 
     /* Keyframe colors */
-    --keyframe-color: #666;
-    --keyframe-color-hover: #888;
-    --keyframe-color-selected: var(--accent-color-light);
-    --keyframe-border: #444;
+    --keyframe-color: #5a7a9e; /* Low saturation dark blue */
+    --keyframe-color-hover: #7b9fce; /* Brighter dark blue */
+    --keyframe-color-selected: #3b82f6; /* Accent dark blue */
+    --keyframe-border: #2c5aa0;
 
     /* Selection Rectangle */
-    --selection-bg: rgba(0, 120, 215, 0.3);
-    --selection-border: #0078d7;
+    --selection-bg: rgba(59, 130, 246, 0.3);
+    --selection-border: #3b82f6;
 
     /* Playhead */
     --playhead-bg: var(--accent-color);
