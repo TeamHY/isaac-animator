@@ -7,40 +7,39 @@ import {
   onMenuOpenFileError,
   onMenuSaveFile,
   onMenuSaveAsFile,
-  loadImageAsDataURL,
-  getDirectoryPath,
-  joinPath,
-  normalizePath
 } from "@app/preload";
+import { getSpritesheetData, type SpritesheetDataMap } from "../utils/spritesheetData";
 
 /**
  * File handling composable
  */
 export function useFileHandler(
-  setRenderer: (renderer: Anm2Renderer | null) => void,
+  setRenderer: (renderer: Anm2Renderer | null, anm2Path: string) => void,
   resetState: () => void,
   setAnimation: (name: string) => void
 ) {
   const handleFileOpen = async (data: { filePath: string; content: string }) => {
     try {
       const anm2Data = Anm2Parser.parseFromString(data.content);
-      const newRenderer = new Anm2Renderer(anm2Data);
-      const basePath = getDirectoryPath(data.filePath);
+      
+      const spritesheets: SpritesheetDataMap = new Map();
 
-      const spritesheetDataURLs = new Map<number, string>();
-      for (const spritesheet of anm2Data.content.spritesheets) {
-        try {
-          const fullPath = joinPath(basePath, normalizePath(spritesheet.path));
-          const dataURL = await loadImageAsDataURL(fullPath);
-          spritesheetDataURLs.set(spritesheet.id, dataURL);
-        } catch (error) {
-          console.warn(`Failed to load spritesheet: ${spritesheet.path}`, error);
+      const loadPromises =  anm2Data.content.spritesheets.map(
+        async (spritesheet) => {
+          const spritesheetData = await getSpritesheetData(data.filePath, spritesheet);
+
+          if (!spritesheetData) {
+            return;
+          }
+
+          spritesheets.set(spritesheet.id, spritesheetData);
         }
-      }
+      )
+      await Promise.all(loadPromises)
 
-      await newRenderer.loadSpritesheets(spritesheetDataURLs);
+      const newRenderer = new Anm2Renderer(anm2Data, spritesheets);
 
-      setRenderer(newRenderer);
+      setRenderer(newRenderer, data.filePath);
 
       if (anm2Data.defaultAnimation) {
         setAnimation(anm2Data.defaultAnimation);

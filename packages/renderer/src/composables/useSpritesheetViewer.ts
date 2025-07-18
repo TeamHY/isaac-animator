@@ -323,7 +323,7 @@ export function useSpritesheetViewer(pixiContainer: Ref<HTMLDivElement | null>) 
     if (spritesheetId === null || !mainSprite) return;
 
     try {
-      const texture = animationState?.renderer?.getSpritesheetTexture(spritesheetId);
+      const texture = animationState?.renderer?.getSpritesheet(spritesheetId)?.texture;
 
       if (!texture) {
         throw new Error(`Spritesheet texture not found for ID: ${spritesheetId}`);

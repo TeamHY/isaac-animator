@@ -1,6 +1,6 @@
 import { computed } from 'vue';
 import { useAnimationState } from './useAnimationState';
-import type { Anm2Spritesheet, Anm2Layer } from '../types/anm2';
+import type { Anm2Layer } from '../types/anm2';
 
 export function useSpritesheetList() {
   const { animationState } = useAnimationState();
@@ -11,7 +11,7 @@ export function useSpritesheetList() {
 
   const getSpritesheetThumbnail = (spritesheetId: number) => {
     if (!animationState?.renderer) return null;
-    return animationState.renderer.getSpritesheetDataURL(spritesheetId);
+    return animationState.renderer.getSpritesheet(spritesheetId)?.dataURL;
   };
 
   const selectSpritesheet = (spritesheetId: number) => {

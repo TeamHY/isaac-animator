@@ -4,26 +4,25 @@ import { DockviewVue } from "dockview-vue";
 import { useAppState, useFileHandler, useDockviewSetup } from "./composables";
 import { onMenuUndo, onMenuRedo, updateMenuState } from "@app/preload";
 
-const { animationState, setRenderer, resetState, undo, redo, canUndoState, canRedoState } = useAppState();
+const { animationState, setRenderer, resetState, undo, redo, canUndo, canRedo } = useAppState();
 
 useFileHandler(setRenderer, resetState, animationState.setAnimation);
 
 const { onReady } = useDockviewSetup();
 
-// Undo/Redo 메뉴 이벤트 리스너 설정
 onMounted(() => {
-  onMenuUndo(() => {
-    undo();
+  onMenuUndo(async () => {
+    await undo();
   });
 
-  onMenuRedo(() => {
-    redo();
+  onMenuRedo(async () => {
+    await redo();
   });
 });
 
-// 메뉴 상태 업데이트
-watch([canUndoState, canRedoState], ([canUndo, canRedo]) => {
+watch([canUndo, canRedo], ([canUndo, canRedo]) => {
   updateMenuState(canUndo, canRedo);
+  console.log(canUndo, canRedo);
 }, { immediate: true });
 </script>
 

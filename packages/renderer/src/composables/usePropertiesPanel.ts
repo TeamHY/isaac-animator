@@ -73,7 +73,6 @@ export function usePropertiesPanel() {
   const offsetG = createFrameDataComputed(frame => frame.greenOffset, 0);
   const offsetB = createFrameDataComputed(frame => frame.blueOffset, 0);
 
-  // 값 업데이트 함수들
   const updateProperty = (property: keyof Anm2Frame, value: any, description?: string) => {
     if (!animationState || animationState.selectedLayerId === null || !animationState.renderer) {
       return;

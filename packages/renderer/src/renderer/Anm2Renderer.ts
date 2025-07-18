@@ -1,11 +1,11 @@
 import { Container, Sprite, Texture, Assets, Rectangle, TextureSource, Graphics } from 'pixi.js';
 import type { Anm2Data, Anm2Animation, Anm2LayerAnimation, Anm2NullAnimation, Anm2Frame } from '../types/anm2';
 import type { LayerState } from '../types/animation';
+import type { SpritesheetData, SpritesheetDataMap } from '../utils/spritesheetData';
 
 export class Anm2Renderer {
   private anm2Data: Anm2Data;
-  private spritesheetTextures: Map<number, Texture> = new Map();
-  private spritesheetDataURLs: Map<number, string> = new Map();
+  private spritesheets: SpritesheetDataMap = new Map();
   private currentAnimation: string = '';
   private currentFrame: number = 0;
   private isPlaying: boolean = false;
@@ -19,33 +19,19 @@ export class Anm2Renderer {
   public nullContainers: Map<number, Container> = new Map();
   public nullGraphics: Map<number, Graphics> = new Map();
 
-  constructor(anm2Data: Anm2Data) {
+  constructor(anm2Data: Anm2Data, spritesheets: SpritesheetDataMap) {
     this.anm2Data = anm2Data;
+    this.spritesheets = spritesheets;
     this.container = new Container();
     this.currentAnimation = anm2Data.defaultAnimation;
     this.initializeLayers();
     this.initializeNulls();
   }
 
-  async loadSpritesheets(dataURLs: Map<number, string>): Promise<void> {
-    this.spritesheetDataURLs = new Map(dataURLs);
-
-    const loadPromises = this.anm2Data.content.spritesheets.map(async (spritesheet) => {
-      try {
-        const texture = await Assets.load<Texture<TextureSource<any>>>(dataURLs.get(spritesheet.id) ?? '');
-        texture.source.scaleMode = 'nearest';
-        this.spritesheetTextures.set(spritesheet.id, texture);
-        console.log('Spritesheet loaded:', spritesheet.id, texture.width, 'x', texture.height);
-      } catch (error) {
-        console.warn(`Failed to load spritesheet: ${spritesheet.path}`, error);
-      }
-    });
-
-    await Promise.all(loadPromises);
-  }
-
   private initializeLayers(): void {
-    for (const layer of this.anm2Data.content.layers) {
+    const reversedLayers = [...this.anm2Data.content.layers].reverse();
+
+    for (const layer of reversedLayers) {
       const layerContainer = new Container();
       layerContainer.name = layer.name;
       this.layerContainers.set(layer.id, layerContainer);
@@ -145,12 +131,12 @@ export class Anm2Renderer {
     return this.anm2Data.animations.find(anim => anim.name === this.currentAnimation);
   }
 
-  getSpritesheetTexture(spritesheetId: number): Texture | undefined {
-    return this.spritesheetTextures.get(spritesheetId);
+  getSpritesheet(spritesheetId: number): SpritesheetData | undefined {
+    return this.spritesheets.get(spritesheetId);
   }
 
-  getSpritesheetDataURL(spritesheetId: number): string | null {
-    return this.spritesheetDataURLs.get(spritesheetId) || null;
+  getSpritesheetWithPath(path: string): SpritesheetData | undefined {
+    return Array.from(this.spritesheets.values()).find(data => data.path === path);
   }
 
   update(): void {
@@ -209,7 +195,6 @@ export class Anm2Renderer {
     }
   }
 
-  // 보간을 위한 헬퍼 함수들
   private lerp(a: number, b: number, t: number): number {
     return a + (b - a) * t;
   }
@@ -370,7 +355,7 @@ export class Anm2Renderer {
     if (!layer) return;
 
     // Set texture with cropping
-    const spritesheetTexture = this.spritesheetTextures.get(layer.spritesheetId);
+    const spritesheetTexture = this.spritesheets.get(layer.spritesheetId)?.texture;
     if (spritesheetTexture && frame.xCrop !== undefined && frame.yCrop !== undefined &&
         frame.width !== undefined && frame.height !== undefined) {
 
@@ -709,7 +694,7 @@ export class Anm2Renderer {
 
   dispose(): void {
     this.container.destroy({ children: true });
-    this.spritesheetTextures.clear();
+    this.spritesheets.clear();
     this.layerContainers.clear();
     this.layerSprites.clear();
     this.nullContainers.clear();

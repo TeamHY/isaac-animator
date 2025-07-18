@@ -2,6 +2,7 @@ import type { Anm2Renderer } from "../renderer/Anm2Renderer";
 import type { Anm2Frame } from "./anm2";
 
 export type AnimationState = {
+  anm2Path: string;
   renderer: Anm2Renderer | null;
   availableAnimations: string[];
   currentAnimation: string;
