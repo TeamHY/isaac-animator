@@ -29,9 +29,9 @@ export class Anm2Renderer {
   }
 
   private initializeLayers(): void {
-    const reversedLayers = [...this.anm2Data.content.layers].reverse();
+    const sortedLayers = [...this.anm2Data.content.layers].sort((a, b) => a.id - b.id);
 
-    for (const layer of reversedLayers) {
+    for (const layer of sortedLayers) {
       const layerContainer = new Container();
       layerContainer.name = layer.name;
       this.layerContainers.set(layer.id, layerContainer);
@@ -472,7 +472,7 @@ export class Anm2Renderer {
         currentFrame: currentFrameData,
         isNullLayer: false,
       };
-    });
+    }).sort((a, b) => b.layerId - a.layerId);
 
     // Add null states (convert ID to negative to distinguish from layers)
     const nullStates: LayerState[] = animation.nullAnimations.map((nullAnim): LayerState => {

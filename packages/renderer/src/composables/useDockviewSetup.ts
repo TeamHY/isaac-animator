@@ -33,24 +33,14 @@ export function useDockviewSetup() {
     });
 
     event.api.addPanel({
-      id: "spritesheet-list-panel",
-      title: "Spritesheets",
-      component: "spritesheet-list-panel",
+      id: "project-panel",
+      title: "Project",
+      component: "project-panel",
       position: {
         referencePanel: "spritesheet-viewer-panel",
         direction: "right",
       },
       initialWidth: 250,
-    });
-
-    event.api.addPanel({
-      id: "animation-list-panel",
-      title: "Animations",
-      component: "animation-list-panel",
-      position: {
-        referencePanel: "spritesheet-list-panel",
-        direction: "below",
-      },
     });
 
     event.api.addPanel({
