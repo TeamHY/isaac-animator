@@ -186,6 +186,15 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
     isPlaying.value = !!animationState?.renderer?.getIsPlaying();
   };
 
+  const getCameraInfo = () => ({ x: cameraOffset.x, y: cameraOffset.y });
+  const getContainerSize = () => {
+    if (!pixiContainer.value) return { width: 800, height: 600 };
+    return {
+      width: pixiContainer.value.clientWidth,
+      height: pixiContainer.value.clientHeight
+    };
+  };
+
   return {
     pixiContainer,
     isPlaying,
@@ -194,5 +203,7 @@ export function usePreviewPanel(pixiContainer: Ref<HTMLDivElement | null>) {
     setZoom,
     resetZoom,
     togglePlay,
+    getCameraInfo,
+    getContainerSize,
   };
 }
