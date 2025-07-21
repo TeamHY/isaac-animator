@@ -91,57 +91,57 @@ export function usePropertiesPanel() {
   };
 
   const updateCropX = (value: string) => {
-    const numValue = value === '' ? undefined : parseFloat(value);
+    const numValue = value === '' ? undefined : parseInt(value);
     updateProperty('xCrop', numValue, 'Update crop X');
   };
 
   const updateCropY = (value: string) => {
-    const numValue = value === '' ? undefined : parseFloat(value);
+    const numValue = value === '' ? undefined : parseInt(value);
     updateProperty('yCrop', numValue, 'Update crop Y');
   };
 
   const updateWidth = (value: string) => {
-    const numValue = value === '' ? undefined : parseFloat(value);
+    const numValue = value === '' ? undefined : parseInt(value);
     updateProperty('width', numValue, 'Update width');
   };
 
   const updateHeight = (value: string) => {
-    const numValue = value === '' ? undefined : parseFloat(value);
+    const numValue = value === '' ? undefined : parseInt(value);
     updateProperty('height', numValue, 'Update height');
   };
 
   const updatePositionX = (value: string) => {
-    const numValue = parseFloat(value) || 0;
+    const numValue = parseInt(value) || 0;
     updateProperty('xPosition', numValue, 'Update position X');
   };
 
   const updatePositionY = (value: string) => {
-    const numValue = parseFloat(value) || 0;
+    const numValue = parseInt(value) || 0;
     updateProperty('yPosition', numValue, 'Update position Y');
   };
 
   const updatePivotX = (value: string) => {
-    const numValue = value === '' ? undefined : parseFloat(value);
+    const numValue = value === '' ? undefined : parseInt(value);
     updateProperty('xPivot', numValue, 'Update pivot X');
   };
 
   const updatePivotY = (value: string) => {
-    const numValue = value === '' ? undefined : parseFloat(value);
+    const numValue = value === '' ? undefined : parseInt(value);
     updateProperty('yPivot', numValue, 'Update pivot Y');
   };
 
   const updateScaleX = (value: string) => {
-    const numValue = parseFloat(value) || 0;
+    const numValue = parseInt(value) || 0;
     updateProperty('xScale', numValue, 'Update scale X');
   };
 
   const updateScaleY = (value: string) => {
-    const numValue = parseFloat(value) || 0;
+    const numValue = parseInt(value) || 0;
     updateProperty('yScale', numValue, 'Update scale Y');
   };
 
   const updateRotation = (value: string) => {
-    const numValue = parseFloat(value) || 0;
+    const numValue = parseInt(value) || 0;
     updateProperty('rotation', numValue, 'Update rotation');
   };
 

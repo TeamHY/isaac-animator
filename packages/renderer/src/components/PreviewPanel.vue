@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import type { IDockviewPanelProps } from 'dockview-vue';
 import { usePreviewPanel } from '../composables/usePreviewPanel';
 import { useAnimationState } from '../composables/useAnimationState';
@@ -24,12 +24,17 @@ const showTransformGizmo = ref(true);
 
 // Get current selected layer's transform data
 const selectedLayerTransform = computed(() => {
-  if (!animationState?.selectedLayerId || !animationState?.renderer) {
+  if (animationState?.selectedLayerId === null || !animationState?.renderer) {
     return null;
   }
 
   const frame = animationState.renderer.getCurrentFrameForLayer(animationState.selectedLayerId);
   if (!frame) return null;
+
+  if (animationState?.selectedLayerId < 0) {
+    // TODO: NULL LAYER 처리 해야 함.
+    return null;
+  }
 
   return {
     x: frame.xPosition,
@@ -37,10 +42,10 @@ const selectedLayerTransform = computed(() => {
     scaleX: frame.xScale / 100,
     scaleY: frame.yScale / 100,
     rotation: frame.rotation,
-    width: frame.width,
-    height: frame.height,
-    pivotX: frame.xPivot,
-    pivotY: frame.yPivot,
+    width: frame.width ?? 0,
+    height: frame.height ?? 0,
+    pivotX: frame.xPivot ?? 0,
+    pivotY: frame.yPivot ?? 0,
   };
 });
 

@@ -1,13 +1,13 @@
 <template>
   <div class="input-field">
     <label>{{ label }}</label>
-    <input 
-      :type="type" 
-      :value="value" 
+    <input
+      :type="type"
+      :value="value"
       :readonly="readonly"
       :min="min"
       :max="max"
-      @input="$emit('update:value', ($event.target as HTMLInputElement).value)"
+      @change="handleChange"
     />
   </div>
 </template>
@@ -27,9 +27,28 @@ withDefaults(defineProps<InputFieldProps>(), {
   readonly: false,
 });
 
-defineEmits<{
+const emit = defineEmits<{
   'update:value': [value: string];
 }>();
+
+const handleChange = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const value = target.value;
+
+  if (value === '' || value === '-') {
+    emit('update:value', value);
+    return;
+  }
+
+  const parsed = parseInt(value);
+  const numericValue = isNaN(parsed) ? '' : parsed.toString();
+
+  if (value !== numericValue) {
+    target.value = numericValue;
+  }
+
+  emit('update:value', numericValue);
+};
 </script>
 
 <style scoped>
@@ -73,4 +92,4 @@ defineEmits<{
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px var(--primary-color-light);
 }
-</style> 
+</style>
